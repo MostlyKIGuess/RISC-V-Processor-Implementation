@@ -7,9 +7,9 @@ module and_(
     generate
         for (i = 0; i < 64; i = i + 1) begin : and_chain
             and and_inst(
-                .a(in1[i]),
-                .b(in2[i]),
-                .out(out[i])
+                out[i],
+                in1[i],
+                in2[i]
             );
         end
     endgenerate

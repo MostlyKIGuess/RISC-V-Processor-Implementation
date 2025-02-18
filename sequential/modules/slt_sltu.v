@@ -1,6 +1,6 @@
 module slt_sltu(
     input [63:0] sum_out,
-    input [63:0] carry,
+    input [64:0] carry,
     output slt_out,
     output sltu_out
 );
@@ -8,4 +8,5 @@ module slt_sltu(
     not(
         sltu_out,
         carry[64]
-);
+    );
+endmodule

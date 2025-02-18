@@ -6,10 +6,10 @@ module xor_(
     genvar i;
     generate
         for (i = 0; i < 64; i = i + 1) begin : xor_chain
-            xor xor_inst(
-                .a(in1[i]),
-                .b(in2[i]),
-                .out(out[i])
+            xor (
+                out[i],
+                in1[i],
+                in2[i]
             );
         end
     endgenerate

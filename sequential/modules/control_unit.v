@@ -1,12 +1,12 @@
 module control_unit(
-    input [6:0] opcode,
-    input [2:0] funct3,
-    input [6:0] funct7,
+    input [31:0] instruction,
     output reg mem_read,
     output reg mem_write,
     output reg reg_write,
     output reg branch
 );
+    wire [6:0] opcode = instruction[6:0];
+
     always @(*) begin
         case(opcode)
             7'b0110011: begin 

@@ -1,14 +1,14 @@
 `timescale 1ns/1ps
 
-`include "full_adder.v"
-`include "mux2to1.v"
-`include "add_sub.v"
-`include "xor_.v"
-`include "or_.v"
-`include "and_.v"
-`include "sll.v"
-`include "sr.v"
-`include "slt_sltu.v"
+`include "misc/full_adder.v"
+`include "misc/mux2to1.v"
+`include "alu_ops/add_sub.v"
+`include "alu_ops/xor_.v"
+`include "alu_ops/or_.v"
+`include "alu_ops/and_.v"
+`include "alu_ops/sll.v"
+`include "alu_ops/sr.v"
+`include "alu_ops/slt_sltu.v"
 
 module alu(
     input [31:0] instruction,

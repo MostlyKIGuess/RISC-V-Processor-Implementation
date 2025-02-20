@@ -17,4 +17,11 @@ module register_file(
         if (reg_write && rd != 0)
             registers[rd] <= write_data;
     end
+// yeh karna padega warna starting mein kya hoga bhai?
+initial begin
+    for(integer i = 0; i < 32; i = i + 1) begin
+        registers[i] = 64'b0;
+    end
+end
 endmodule
+

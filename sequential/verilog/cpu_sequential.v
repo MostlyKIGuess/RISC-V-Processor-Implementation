@@ -58,7 +58,7 @@ module cpu_sequential(
     assign pc_next = branch_taken ? branch_target : pc_current + 4;                       // next PC set karo
 
     // program instructions ko store karta hai
-    instruction_memory imem(
+    instruction_memory imem( // REMEMBER INITIALIZED AS imem, so you can do cpu.imem.memory[0] in testbench
         .pc(pc_current),         // current PC se
         .instruction(instruction) // instruction nikalo
     );
@@ -105,7 +105,7 @@ module cpu_sequential(
     );
 
     // Data Memory - data store karne ke liye
-    data_memory dmem(
+    data_memory dmem( // REMEMBER INITIALIZED AS dmem, so you can do cpu.dmem.memory[0] in testbench
         .clk(clk),
         .address(alu_result),         // memory address
         .write_data(reg_read_data2),  // jo data likhna hai

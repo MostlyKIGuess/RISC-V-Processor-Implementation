@@ -68,15 +68,15 @@ module testbench_sequential();
         
         repeat(20) @(posedge clk);
         
-        // register file contents
         $display("Register file contents:");
         for(i = 0; i < 8; i = i + 1) begin
-            $display("x%0d = %0d", i, cpu.reg_file.registers[i]);
+            $display("x%0d = %0d [0x%h]", i, cpu.reg_file.registers[i], cpu.reg_file.registers[i]);
         end
-        
-        // memory contents
+
+        // memory
         $display("\nMemory contents:");
-        $display("mem[0] = %0d", cpu.dmem.memory[0]);
+        $display("mem[0] = %0d [0x%h]", cpu.dmem.memory[0], cpu.dmem.memory[0]);
+                
         
         $finish;
     end
@@ -113,7 +113,7 @@ always @(posedge clk) begin
         $display("rs1(x%0d)=%0d", cpu.rs1, cpu.reg_file.registers[cpu.rs1]);
         $display("rs2(x%0d)=%0d", cpu.rs2, cpu.reg_file.registers[cpu.rs2]);
         if (cpu.reg_write)
-            $display("Writing to rd(x%0d)=%0d", cpu.rd, cpu.reg_write_data);
+            $display("Writing to rd(x%0d)=%0d [0x%h]", cpu.rd, cpu.reg_write_data, cpu.reg_write_data);
         
         // control signals
         $display("Control signals:");
@@ -121,7 +121,7 @@ always @(posedge clk) begin
             cpu.reg_write, cpu.mem_read, cpu.mem_write, cpu.branch);
         
         // alu result
-        $display("ALU result=%0d", cpu.alu_result);
+        $display("ALU result=%0d [0x%h]" , cpu.alu_result, cpu.alu_result);
         
         // memory if read/write
         if (cpu.mem_write)

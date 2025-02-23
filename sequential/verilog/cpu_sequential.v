@@ -33,16 +33,16 @@ module cpu_sequential(
     wire [4:0] rs1;            // sourcereg
     wire [4:0] rs2;            // sourcereg
     wire [4:0] rd;             // destination regi
-    wire [63:0] reg_write_data;    
-    wire [63:0] reg_read_data1;    
-    wire [63:0] reg_read_data2;    
+    wire signed [63:0] reg_write_data;    
+    wire signed [63:0] reg_read_data1;    
+    wire signed [63:0] reg_read_data2;    
     
     // ALU ke signals
-    wire [63:0] alu_result;     // ALU ka final answer
-    wire [63:0] alu_operand2;   // ALU ka dusra input (reg ya immediate value)
+    wire signed [63:0] alu_result;     // ALU ka final answer
+    wire signed [63:0] alu_operand2;   // ALU ka dusra input (reg ya immediate value)
     
     // memory ke signals
-    wire [63:0] mem_read_data;  // memory se padhi hui value
+    wire signed [63:0] mem_read_data;  // memory se padhi hui value
 
     // Program Counter - instruction address ko track karta hai
     program_counter pc(

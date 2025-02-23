@@ -66,7 +66,7 @@ module testbench_sequential();
         
         @(negedge reset);
         
-        repeat(20) @(posedge clk);
+        repeat(8) @(posedge clk);
         
         $display("Register file contents:");
         for(i = 0; i < 8; i = i + 1) begin

@@ -3,12 +3,12 @@ module register_file(
     input [4:0] rs1,
     input [4:0] rs2,
     input [4:0] rd,
-    input [63:0] write_data,
+    input signed  [63:0] write_data,
     input reg_write,
-    output [63:0] read_data1,
-    output [63:0] read_data2
+    output signed  [63:0] read_data1,
+    output signed  [63:0] read_data2
 );
-    reg [63:0] registers [0:31];
+    reg signed [63:0] registers [0:31];
     
     assign read_data1 = (rs1 == 0) ? 64'b0 : registers[rs1];
     assign read_data2 = (rs2 == 0) ? 64'b0 : registers[rs2];

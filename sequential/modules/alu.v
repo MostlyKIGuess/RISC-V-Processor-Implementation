@@ -12,9 +12,9 @@
 
 module alu(
     input [31:0] instruction,
-    input [63:0] in1,
-    input [63:0] in2,
-    output reg [63:0] out 
+    input signed [63:0] in1,
+    input signed [63:0] in2,
+    output reg signed [63:0] out 
 );
 
     wire [2:0] funct3 = instruction[14:12];
@@ -22,8 +22,8 @@ module alu(
 
     // ----------------ADD/SUB----------------
 
-    wire [63:0] sum_out;
-    wire [64:0] carry;
+    wire signed [63:0] sum_out;
+    wire signed [64:0] carry;
 
     // set to sub if instruction sub, or slt/sltu
     // this couldve been one line with operators :(

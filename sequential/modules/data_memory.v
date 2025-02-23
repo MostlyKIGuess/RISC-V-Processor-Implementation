@@ -1,10 +1,10 @@
 module data_memory(
     input clk,
     input [63:0] address,
-    input [63:0] write_data,
+    input signed [63:0] write_data,
     input mem_read,
     input mem_write,
-    output reg [63:0] read_data
+    output reg signed [63:0] read_data
 );
     reg [7:0] memory [0:1023]; // 1KB memory
     

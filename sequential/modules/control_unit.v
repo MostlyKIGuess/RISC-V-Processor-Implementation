@@ -1,13 +1,13 @@
 module control_unit(
     input [31:0] instruction,
-    input [63:0] in1,           // ALU operand 1
-    input [63:0] in2,           // ALU operand 2
+    input signed [63:0] in1,           // ALU operand 1
+    input signed [63:0] in2,           // ALU operand 2
     output reg mem_read,
     output reg mem_write,
     output reg reg_write,
     output reg branch,
     output reg alu_src,
-    output [63:0] alu_result
+    output signed [63:0] alu_result
 );
     // Instruction fields
     wire [6:0] opcode = instruction[6:0];

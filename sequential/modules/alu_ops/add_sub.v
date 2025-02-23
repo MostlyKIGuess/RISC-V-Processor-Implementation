@@ -1,8 +1,6 @@
 module add_sub(
     input signed [63:0] in1,
     input signed [63:0] in2,
-    input [6:0] funct7,
-    input [2:0] funct3,
     input sub,
     output signed [63:0] sum_out,
     output signed [64:0] carry

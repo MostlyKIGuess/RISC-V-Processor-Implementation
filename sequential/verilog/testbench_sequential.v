@@ -20,7 +20,7 @@ module testbench_sequential();
     );
     
     initial begin
-        cpu.imem.memory[0] = 32'b00000000010000000000000010010011; // addi x1, x0, 2  (i = 2)
+        cpu.imem.memory[0] = 32'b00000000010000000000000010010011; // addi x1, x0, 3  (i = 3)
         cpu.imem.memory[1] = 32'b00000000011100000000000100010011; // addi x2, x0, 7  (j = 7)
 
         // Loop: while (i > 0)
@@ -36,18 +36,17 @@ module testbench_sequential();
     
     integer i;
     initial begin
-        // Waveform setup
         $dumpfile("test_results/cpu_sequential_test.vcd");
         $dumpvars(0, testbench_sequential);
         
-        @(negedge reset); // Wait for reset to be deasserted
+        @(negedge reset);
 
         // Run simulation until a NOP (halt)
         while (cpu.instruction !== 32'b0) begin
             @(posedge clk);
         end
 
-        // Print register contents before finishing
+        // Print register contents
         $display("Register file contents:");
         for (i = 0; i < 8; i = i + 1) begin
             $display("x%0d = %0d [0x%h]", i, cpu.reg_file.registers[i], cpu.reg_file.registers[i]);

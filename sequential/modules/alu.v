@@ -14,7 +14,8 @@ module alu(
     input [31:0] instruction,
     input signed [63:0] in1,
     input signed [63:0] in2,
-    output reg signed [63:0] out 
+    output reg signed [63:0] out,
+    output reg zero
 );
 
     wire [2:0] funct3 = instruction[14:12];
@@ -26,25 +27,8 @@ module alu(
     wire signed [64:0] carry;
 
     // set to sub if instruction sub, or slt/sltu
-    // this couldve been one line with operators :(
-    wire temp1a;
-    wire temp1b;
-    wire temp2a;
-    wire temp2b;
-    wire temp3a;
-    wire temp3b;
-    wire temp3c;
-    wire temp4;
     wire sub;
-    and (temp1a, funct3[0], funct3[1]);
-    and (temp1b, temp1a, ~funct3[2]);
-    and (temp2a, ~funct3[0], funct3[1]);
-    and (temp2b, temp2a, ~funct3[2]);
-    and (temp3a, ~funct3[0], ~funct3[1]);
-    and (temp3b, temp3a, ~funct3[2]);
-    and (temp3c, temp3b, funct7[5]);
-    or (temp4, temp1b, temp2b);
-    or (sub, temp4, temp3c);
+    assign sub = ((funct3==3'h0 && funct7==7'h20) || (funct3==3'h2) || (funct3==3'h3)) ? 1 : 0;
 
     add_sub add_sub_unit(
         .in1(in1),
@@ -111,6 +95,12 @@ module alu(
         .slt_out(slt_out),
         .sltu_out(sltu_out)
     );
+
+    // ----------------ZERO----------------
+
+    always @(*) begin
+        zero = (out == 0);
+    end
 
     always @(*) begin
         case (funct3)

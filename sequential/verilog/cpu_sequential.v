@@ -59,12 +59,6 @@ module cpu_sequential(
         .pc(pc_current),         // current PC se
         .instruction(instruction) // instruction nikalo
     );
-    
-    // // stop program if instruction is 0
-    // always @(*) begin
-    //     if (instruction == 32'b0)
-    //         $finish;
-    // end
 
     control_unit ctrl(
         .instruction(instruction),  // instruction decode karke

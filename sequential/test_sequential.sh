@@ -2,6 +2,16 @@
 
 mkdir -p test_results
 
+if [ $# -eq 0 ]; then
+    echo "Usage: $0 <test_file>"
+    exit 1
+fi
+
+TEST_FILE=$1
+
+echo "Assembling test file..."
+python3 testcases/assembler.py "$TEST_FILE"
+
 echo "Compiling Verilog files..."
 iverilog -o test_results/cpu_test \
     verilog/cpu_sequential.v \

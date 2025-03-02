@@ -15,9 +15,9 @@ if [ $? -eq 0 ]; then
     vvp test_results/cpu_test
     
     # if you wanna generate waveforms bruhhhh
-    if [ -f cpu_sequential_test.vcd ]; then
+    if [ -f test_results/cpu_sequential_test.vcd ]; then
         echo "Generating waveform..."
-        gtkwave cpu_sequential_test.vcd &
+        gtkwave test_results/cpu_sequential_test.vcd &
     else
         echo "Error: Waveform file not generated"
     fi

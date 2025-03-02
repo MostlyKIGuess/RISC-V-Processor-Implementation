@@ -61,7 +61,7 @@ module testbench_sequential();
     integer i;
     initial begin
         // waveforms
-        $dumpfile("cpu_sequential_test.vcd");
+        $dumpfile("test_results/cpu_sequential_test.vcd");
         $dumpvars(0, testbench_sequential);
         
         @(negedge reset);

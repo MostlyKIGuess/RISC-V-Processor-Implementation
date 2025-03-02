@@ -49,8 +49,6 @@ module alu(
     add_sub add_sub_unit(
         .in1(in1),
         .in2(in2),
-        .funct7(funct7),
-        .funct3(funct3),
         .sub(sub),
         .sum_out(sum_out),
         .carry(carry)

@@ -9,3 +9,6 @@ cd sequential
 chmod +x test_sequential.sh
 ./test_sequential.sh <filename>.s
 ```
+
+
+NOTE: `ld` and `sd` are used to load and store double words. But, they use the same instructions as `lw` and `sw` that are not implemented in this version.

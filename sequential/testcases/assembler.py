@@ -110,7 +110,7 @@ def main():
                 binary_instruction = funct7 + rs2 + rs1 + funct3 + rd + opcode
                 
             elif instruction_type == 'I':
-                # I-type: addi, lw
+                # I-type: addi, ld
                 if tokens[0] == "addi":
                     opcode = "0010011"
                     funct3 = "000"
@@ -120,7 +120,7 @@ def main():
                     
                     binary_instruction = imm + rs1 + funct3 + rd + opcode
                     
-                elif tokens[0] == "lw":
+                elif tokens[0] == "ld":
                     opcode = "0000011"
                     funct3 = "010"
                     rd = format_register(tokens[1])
@@ -140,7 +140,7 @@ def main():
                     binary_instruction = imm + rs1 + funct3 + rd + opcode
             
             elif instruction_type == 'S':
-                # S-type: sw
+                # S-type: sd
                 opcode = "0100011"
                 funct3 = "010"
                 rs2 = format_register(tokens[1])  # Source register
@@ -330,9 +330,9 @@ endmodule'''
 def get_instruction_type(instruction):
     if instruction in ["add", "sub", "or", "and"]:
         return 'R'
-    elif instruction in ["addi", "lw"]:
+    elif instruction in ["addi", "ld"]:
         return 'I'
-    elif instruction in ["sw"]:
+    elif instruction in ["sd"]:
         return 'S'
     elif instruction in ["beq"]:
         return 'B'

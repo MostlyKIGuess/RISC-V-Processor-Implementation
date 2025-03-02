@@ -248,7 +248,7 @@ module testbench_sequential();
 
         // Print register contents
         $display("Register file contents:");
-        for (i = 0; i < 8; i = i + 1) begin
+        for (i = 0; i < 32; i = i + 1) begin
             $display("x%0d = %0d [0x%h]", i, cpu.reg_file.registers[i], cpu.reg_file.registers[i]);
         end
 

@@ -258,6 +258,9 @@ module testbench_sequential();
             $display("mem[%0d] = %0d [0x%h]", i, cpu.dmem.memory[i], cpu.dmem.memory[i]);
         end
 
+        $writememh("modules/data_memory.hex", cpu.dmem.memory);
+        $display("\\nData memory contents written to 'modules/data_memory.hex'");
+
         $finish;
     end
 

@@ -22,3 +22,14 @@ cd sequential
 mkdir -p visualization test_results
 chmod +x visualization/data_converter.py visualize.sh
 ```
+
+## reset memory
+
+```sh
+./reset_memory.sh
+```
+
+## on visualizing memory
+
+- the first load will be preloaded ( for reasons of my skill issue on implementing actual realtime memory) but apart from that it should be correct.
+- resetting the memory is advisable but if you don't it uses the prev one like it should.

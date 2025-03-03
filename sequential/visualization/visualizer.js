@@ -247,8 +247,8 @@ document.addEventListener("DOMContentLoaded", function () {
     let signalsText = "";
     for (const [key, value] of Object.entries(signals)) {
       signalsText += `<div class="signal ${value ? "active" : "inactive"}">
-                ${key}: <span class="signal-value">${value ? "1" : "0"}</span>
-            </div>`;
+                  ${key}: <span class="signal-value">${value ? "1" : "0"}</span>
+              </div>`;
     }
     controlSignals.innerHTML = signalsText;
   }
@@ -265,11 +265,11 @@ document.addEventListener("DOMContentLoaded", function () {
       registersText += `<div class="register ${
         isChanged ? "register-changed" : ""
       }">
-                <span>x${i}</span>
-                <span>${value} [0x${value
+                  <span>x${i}</span>
+                  <span>${value} [0x${value
         .toString(16)
         .padStart(16, "0")}]</span>
-            </div>`;
+              </div>`;
     }
 
     registerView.innerHTML = registersText;
@@ -280,10 +280,9 @@ document.addEventListener("DOMContentLoaded", function () {
     let memoryText = "";
 
     for (let base = 0; base < Math.min(256, memory.length); base += 8) {
-      
       let hasNonZero = false;
       for (let i = 0; i < 8; i++) {
-        if ((base + i) < memory.length && memory[base + i] !== 0) {
+        if (base + i < memory.length && memory[base + i] !== 0) {
           hasNonZero = true;
           break;
         }
@@ -291,17 +290,26 @@ document.addEventListener("DOMContentLoaded", function () {
 
       if (hasNonZero || base < 32 || [32, 40].includes(base)) {
         memoryText += `<div class="memory-group">`;
-        memoryText += `<div class="memory-address">Address [${base.toString(16).padStart(2, "0")}h - ${(base+7).toString(16).padStart(2, "0")}h]:</div>`;
+        memoryText += `<div class="memory-address">Address [${base
+          .toString(16)
+          .padStart(2, "0")}h - ${(base + 7)
+          .toString(16)
+          .padStart(2, "0")}h]:</div>`;
 
         for (let i = 0; i < 8; i++) {
           const addr = base + i;
           if (addr < memory.length) {
             const value = memory[addr] || 0;
-            const isChanged = cycleData.changedMemory && cycleData.changedMemory.includes(addr);
+            const isChanged =
+              cycleData.changedMemory && cycleData.changedMemory.includes(addr);
 
-            memoryText += `<div class="memory-byte ${isChanged ? "register-changed" : ""}">
-                <span>mem[${addr}] = ${value} [0x${value.toString(16).padStart(2, "0")}]</span>
-            </div>`;
+            memoryText += `<div class="memory-byte ${
+              isChanged ? "register-changed" : ""
+            }">
+                  <span>mem[${addr}] = ${value} [0x${value
+              .toString(16)
+              .padStart(2, "0")}]</span>
+              </div>`;
           }
         }
         memoryText += `</div>`;
@@ -309,7 +317,7 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     memoryView.innerHTML = memoryText;
-}
+  }
 
   function highlightActivePaths(cycleData) {
     d3.selectAll(".data-path").classed("active", false);

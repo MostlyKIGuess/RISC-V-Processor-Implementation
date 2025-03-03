@@ -20,18 +20,12 @@ module testbench_sequential();
     );
     
     initial begin
-        cpu.imem.memory[0] = 32'b00000000010100000000000010010011;
-        cpu.imem.memory[1] = 32'b00000000001000000000000100010011;
-        cpu.imem.memory[2] = 32'b00000000000000000000000110110011;
-        cpu.imem.memory[3] = 32'b00000010000000001000000001100011;
-        cpu.imem.memory[4] = 32'b00000000000000010000001000010011;
-        cpu.imem.memory[5] = 32'b00000000000000100000100001100011;
-        cpu.imem.memory[6] = 32'b00000000000100011000000110110011;
-        cpu.imem.memory[7] = 32'b11111111111100100000001000010011;
-        cpu.imem.memory[8] = 32'b11111110000000000000101011100011;
-        cpu.imem.memory[9] = 32'b11111111111100001000000010010011;
-        cpu.imem.memory[10] = 32'b11111110000000000000001011100011;
-        cpu.imem.memory[11] = 32'b00000000000000000000000000000000;
+        cpu.imem.memory[0] = 32'b00000000000000000000010100010011;
+        cpu.imem.memory[1] = 32'b00000000000001010010010110000011;
+        cpu.imem.memory[2] = 32'b00000000100001010010011000000011;
+        cpu.imem.memory[3] = 32'b00000000100001010000010100010011;
+        cpu.imem.memory[4] = 32'b00000000000001010010011010000011;
+        cpu.imem.memory[5] = 32'b00000000000000000000000000000000;
     end
 
     
@@ -55,7 +49,9 @@ module testbench_sequential();
 
         // Memory contents
         $display("\nMemory contents:");
-        $display("mem[0] = %0d [0x%h]", cpu.dmem.memory[0], cpu.dmem.memory[0]);
+        for (i = 0; i < 32; i = i + 1) begin
+            $display("mem[%0d] = %0d [0x%h]", i, cpu.dmem.memory[i], cpu.dmem.memory[i]);
+        end
 
         $finish;
     end

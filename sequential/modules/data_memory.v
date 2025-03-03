@@ -8,6 +8,11 @@ module data_memory(
 );
     reg [7:0] memory [0:1023]; // 1KB memory (byte-addressable)
 
+    // Load memory from file at the beginning
+    initial begin
+        $readmemh("modules/data_memory.hex", memory);
+    end
+
     always @(posedge clk) begin
         if (mem_write) begin
             memory[address]   <= write_data[7:0];

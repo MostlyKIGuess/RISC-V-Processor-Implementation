@@ -254,7 +254,9 @@ module testbench_sequential();
 
         // Memory contents
         $display("\\nMemory contents:");
-        $display("mem[0] = %0d [0x%h]", cpu.dmem.memory[0], cpu.dmem.memory[0]);
+        for (i = 0; i < 32; i = i + 1) begin
+            $display("mem[%0d] = %0d [0x%h]", i, cpu.dmem.memory[i], cpu.dmem.memory[i]);
+        end
 
         $finish;
     end

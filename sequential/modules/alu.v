@@ -20,6 +20,7 @@ module alu(
 
     wire [2:0] funct3 = instruction[14:12];
     wire [6:0] funct7 = instruction[31:25];
+    wire [6:0] opcode = instruction[6:0];
 
     // ----------------ADD/SUB----------------
 
@@ -28,7 +29,7 @@ module alu(
 
     // set to sub if instruction sub, or slt/sltu
     wire sub;
-    assign sub = ((funct3==3'h0 && funct7==7'h20) || (funct3==3'h2) || (funct3==3'h3)) ? 1 : 0;
+    assign sub = ((funct3==3'h0 && funct7==7'h20) || (funct3==3'h2) || (funct3==3'h3)) && (opcode!=7'b0000011) ? 1 : 0;
 
     add_sub add_sub_unit(
         .in1(in1),
@@ -103,16 +104,21 @@ module alu(
     end
 
     always @(*) begin
-        case (funct3)
-            3'h0: out = sum_out;
-            3'h4: out = xor_out;
-            3'h6: out = or_out;
-            3'h7: out = and_out;
-            3'h1: out = sll_out;
-            3'h5: out = sr_out;
-            3'h2: out = {63'b0, slt_out};
-            3'h3: out = {63'b0, sltu_out};
-        endcase
+        if (opcode == 7'b0000011) begin
+            out = sum_out;
+        end
+        else begin
+            case (funct3)
+                3'h0: out = sum_out;
+                3'h4: out = xor_out;
+                3'h6: out = or_out;
+                3'h7: out = and_out;
+                3'h1: out = sll_out;
+                3'h5: out = sr_out;
+                3'h2: out = {63'b0, slt_out};
+                3'h3: out = {63'b0, sltu_out};
+            endcase
+        end
     end
 
 endmodule

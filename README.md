@@ -2,7 +2,7 @@
 
 ## Sequential Implementation
 
-Add the assembly code in the `sequential/testcases` directory and run the following commands to test the code. A few examples are provided there already to refer to syntax.
+Add the assembly code in the `sequential/testcases` directory and run the following commands to test the code. A few examples are provided there already to refer to syntax. `sequential/modules/data_memory.hex` contains the data memory.
 
 ```bash
 cd sequential

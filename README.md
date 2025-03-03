@@ -14,3 +14,11 @@ chmod +x test_sequential.sh
 NOTES: 
 - `ld` and `sd` are used to load and store double words. But, they use the same instructions as `lw` and `sw` that are not implemented in this version.
 - Since data memory only supports 64 bit read and write, remember to only use addresses that are multiples of 8.
+
+## web visulization:
+- if doesn't run by doing the test_sequential.sh otherwise it should just open a web browser
+```bash
+cd sequential
+mkdir -p visualization test_results
+chmod +x visualization/data_converter.py visualize.sh
+```

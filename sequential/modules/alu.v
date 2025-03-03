@@ -29,7 +29,7 @@ module alu(
 
     // set to sub if instruction sub, or slt/sltu
     wire sub;
-    assign sub = ((funct3==3'h0 && funct7==7'h20) || (funct3==3'h2) || (funct3==3'h3)) && (opcode!=7'b0000011) && (opcode!=7'b0100011) ? 1 : 0;
+    assign sub = ((funct3==3'h0 && funct7==7'h20 && opcode==7'b0110011) || (funct3==3'h2 && opcode==7'b0110011) || (funct3==3'h3 && opcode==7'b0110011) || (opcode==7'b1100011)) ? 1 : 0;
 
     add_sub add_sub_unit(
         .in1(in1),

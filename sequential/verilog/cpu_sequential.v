@@ -89,7 +89,7 @@ module cpu_sequential(
 
     // ALU ka dusra operand select karo
     wire [63:0] temp;
-    assign temp = (instruction[6:0]==7'b0010011) ? {{53{instruction[31]}}, instruction[30:20]} : {{53{instruction[31]}},{instruction[30:25]},{instruction[11:7]}};
+    assign temp = (instruction[6:0]==7'b0010011 || instruction[6:0]==7'b0000011) ? {{53{instruction[31]}}, instruction[30:20]} : {{53{instruction[31]}},{instruction[30:25]},{instruction[11:7]}};
     assign alu_operand2 = alu_src ? temp : reg_read_data2;  // immediate ya register value
     
     // ALU - actual calculation karta hai

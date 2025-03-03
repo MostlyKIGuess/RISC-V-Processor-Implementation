@@ -1,3 +1,3 @@
 #!/bin/bash
 
-cp modules/memoryreset.hex modules/data_memory.hex
+cp modules/memory_reset.hex modules/data_memory.hex

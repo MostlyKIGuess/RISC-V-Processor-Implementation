@@ -1,5 +1,5 @@
 start:
-    addi x10, x0, 10  # Load n
+    addi x10, x0, 20  # Load n
     addi x11, x0, 1   # x11 = 1 (accumulator for factorial)
     beq x10, x0, done # If n == 0, factorial is 1
 

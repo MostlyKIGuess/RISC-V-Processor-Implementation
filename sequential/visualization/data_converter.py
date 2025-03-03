@@ -16,12 +16,26 @@ def parse_simulation_output(output_file):
         print(f"Error: File '{output_file}' not found.")
         sys.exit(1)
     
+    # memory dump 
+    memory = [0] * 256  # Initialize with zeros
+    memory_section = re.search(r"Memory contents:(.*?)(?=\n\n|\Z)", content, re.DOTALL)
+    if memory_section:
+        memory_lines = memory_section.group(1).strip().split('\n')
+        for line in memory_lines:
+            # Parse lines like: mem[22] = 255 [0xff]
+            mem_match = re.search(r"mem\[(\d+)\] = (-?\d+) \[0x([0-9a-fA-F]+)\]", line)
+            if mem_match:
+                addr = int(mem_match.group(1))
+                value = int(mem_match.group(2))
+                if addr < len(memory):
+                    memory[addr] = value
+    
+    
     cycle_pattern = r"--------------------------------(.*?)(?=--------------------------------|\Z)"
     cycle_matches = re.findall(cycle_pattern, content, re.DOTALL)
     
     cycles = []
-    registers = [0] * 32  #all start with 0
-    memory = [0] * 256    # 256 limit boi ( all 0)
+    registers = [0] * 32 #all start with 0
     
     for cycle_text in cycle_matches:
         cycle_data = {}

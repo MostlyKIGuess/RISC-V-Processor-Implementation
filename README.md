@@ -18,6 +18,14 @@ PS: I recommend testing 2.s ( a really long programme that checks all the ALU fu
 ./test_sequential.sh 2.s
 ```
 
+## Assembly Instructions Supported
+
+The assembler supports a subset of RISC-V instructions:
+- **R-type**: `add`, `sub`, `or`, `and`
+- **I-type**: `addi`, `ld` (load doubleword)
+- **S-type**: `sd` (store doubleword)
+- **B-type**: `beq` (branch if equal)
+- **Special**: `nop` (no operation)
 
 ### NOTES: 
 - `ld` and `sd` are used to load and store double words. But, they use the same instructions as `lw` and `sw` that are not implemented in this version.

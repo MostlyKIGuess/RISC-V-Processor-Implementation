@@ -10,26 +10,29 @@ chmod +x test_sequential.sh
 ./test_sequential.sh <filename>.s
 ```
 
+PS: I recommend testing 2.s ( a really long programme that checks all the ALU funciton) and 5.s ( has all the instructions.)
+```bash
+./test_sequential.sh 5.s
+./test_sequential.sh 2.s
+```
 
-NOTES: 
+
+### NOTES: 
 - `ld` and `sd` are used to load and store double words. But, they use the same instructions as `lw` and `sw` that are not implemented in this version.
 - Since data memory only supports 64 bit read and write, remember to only use addresses that are multiples of 8.
 
-## web visulization:
+## Web visulization:
 - if doesn't run by doing the test_sequential.sh otherwise it should just open a web browser
 ```bash
 cd sequential
 mkdir -p visualization test_results
-chmod +x visualization/data_converter.py visualize.sh
+chmod +x visualize.sh
 ```
 
-## reset memory
-
+## Reset Memory
+- To make the .hex file all 0s.
 ```sh
 ./reset_memory.sh
 ```
 
-## on visualizing memory
 
-- the first load will be preloaded ( for reasons of my skill issue on implementing actual realtime memory) but apart from that it should be correct.
-- resetting the memory is advisable but if you don't it uses the prev one like it should.

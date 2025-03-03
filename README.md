@@ -1,4 +1,6 @@
+
 # RISC-V Implementation in Verilog
+
 
 ## Sequential Implementation
 
@@ -36,3 +38,18 @@ chmod +x visualize.sh
 ```
 
 
+## Project Structure
+
+- [pipelined/](pipelined/)
+  - Holds the pipelined Verilog implementation ([cpu_pipelined.v](pipelined/verilog/cpu_pipelined.v)) and testbench.
+  - [simulations/](pipelined/simulations/) includes simulation logs and waveforms.
+- [report/](report/)
+  - Contains the LaTeX and PDF files ([design_report.tex](report/design_report.tex), [design_report.pdf](report/design_report.pdf)).
+- [sequential/](sequential/)
+  - Houses the single-cycle Verilog files, test scripts, and memory files ([data_memory.v](sequential/modules/data_memory.v), [instruction_memory.v](sequential/modules/instruction_memory.v)).
+  - [testcases/](sequential/testcases/) holds example assembly programs (e.g., [1.s](sequential/testcases/1.s)).
+  - [visualization/](sequential/visualization/) includes the visualization page ([index.html](sequential/visualization/index.html)), JavaScript ([visualizer.js](sequential/visualization/visualizer.js)) and CSS ([styles.css](sequential/visualization/styles.css)).
+  - [test_sequential.sh](sequential/test_sequential.sh) runs the Verilog testbench on a specified .s file.
+  - [reset_memory.sh](sequential/reset_memory.sh) resets the data memory to all zeros.
+- [README.md](README.md)
+  - Main documentation with setup instructions.

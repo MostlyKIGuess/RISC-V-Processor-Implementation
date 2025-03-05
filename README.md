@@ -12,10 +12,11 @@ chmod +x test_sequential.sh
 ./test_sequential.sh <filename>.s
 ```
 
-PS: I recommend testing 2.s ( a really long programme that checks all the ALU funciton) and 5.s ( has all the instructions.)
+PS: I recommend testing 2.s ( a really long programme that checks all the ALU funciton) and 5.s ( has all the instructions). 6.s checks for invalid data memory address.
 ```bash
 ./test_sequential.sh 5.s
 ./test_sequential.sh 2.s
+./test_sequential.sh 6.s
 ```
 
 ## Assembly Instructions Supported
@@ -31,7 +32,7 @@ The assembler supports a subset of RISC-V instructions:
 - `ld` and `sd` are used to load and store double words. But, they use the same instructions as `lw` and `sw` that are not implemented in this version.
 - Since data memory only supports 64 bit read and write, remember to only use addresses that are multiples of 8.
 
-## Web visulization:
+## Web visualization:
 - if doesn't run by doing the test_sequential.sh otherwise it should just open a web browser
 ```bash
 cd sequential

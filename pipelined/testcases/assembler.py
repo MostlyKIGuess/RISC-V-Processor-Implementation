@@ -215,7 +215,6 @@ module testbench_pipelined();
     reg reset;
     wire end_program;
 
-
     integer cycle_count = 0;
     real execution_time;
     real execution_time_ms;
@@ -225,11 +224,13 @@ module testbench_pipelined();
     initial begin
         clk = 0;
         reset = 1;
-        #6 reset = 0;
         
-
+        // Initialize instruction memory first
 {instructions}
-    
+        
+        // promper initialization
+        #10 reset = 0;
+        
         forever #5 clk = ~clk; 
     end
     
@@ -250,6 +251,9 @@ module testbench_pipelined();
         while (!end_program) begin
             @(posedge clk);
         end
+        
+        // Allow pipeline to flush completely
+        repeat (5) @(posedge clk);
 
         // Print register contents
         $display("Register file contents:");
@@ -278,6 +282,74 @@ module testbench_pipelined();
         $display("Picoseconds: %0d ps", execution_time_p);
 
         $finish;
+    end
+    
+    always @(posedge clk) begin
+        if (!reset) begin
+            cycle_count = cycle_count + 1;
+            $display("--------------------------------");
+            $display("Time=%0t, Cycle=%0d", $time, cycle_count);
+            
+            $display("PIPELINE STATE:");
+            $display("IF Stage: PC=%h, Instruction=%h", cpu.pc_current, cpu.instruction);
+            
+            // Decode current instruction in IF stage
+            if (cpu.instruction != 0) begin
+                case(cpu.instruction[6:0])
+                    7'b0110011: begin // R-type 
+                        case(cpu.instruction[14:12])
+                            3'b000: begin
+                                if (cpu.instruction[31:25] == 7'b0000000)
+                                    $display("IF: add x%0d, x%0d, x%0d", 
+                                        cpu.instruction[11:7], cpu.instruction[19:15], cpu.instruction[24:20]);
+                                else
+                                    $display("IF: sub x%0d, x%0d, x%0d", 
+                                        cpu.instruction[11:7], cpu.instruction[19:15], cpu.instruction[24:20]);
+                            end
+                            3'b111: $display("IF: and x%0d, x%0d, x%0d", 
+                                cpu.instruction[11:7], cpu.instruction[19:15], cpu.instruction[24:20]);
+                            3'b110: $display("IF: or x%0d, x%0d, x%0d", 
+                                cpu.instruction[11:7], cpu.instruction[19:15], cpu.instruction[24:20]);
+                        endcase
+                    end
+                    7'b0000011: $display("IF: ld x%0d, %0d(x%0d)", 
+                        cpu.instruction[11:7], $signed({{52{cpu.instruction[31]}}, cpu.instruction[31:20]}), cpu.instruction[19:15]);
+                    7'b0100011: $display("IF: sd x%0d, %0d(x%0d)", 
+                        cpu.instruction[24:20], $signed({{52{cpu.instruction[31]}}, cpu.instruction[31:25], cpu.instruction[11:7]}), cpu.instruction[19:15]);
+                    7'b1100011: $display("IF: beq x%0d, x%0d, %0d", 
+                        cpu.instruction[19:15], cpu.instruction[24:20], 
+                        $signed({{51{cpu.instruction[31]}}, cpu.instruction[7], cpu.instruction[30:25], cpu.instruction[11:8], 1'b0}));
+                    7'b0010011: $display("IF: addi x%0d, x%0d, %0d",
+                        cpu.instruction[11:7], cpu.instruction[19:15], 
+                        $signed({{52{cpu.instruction[31]}}, cpu.instruction[31:20]}));
+                endcase
+            end
+
+            // Show ID stage activity
+            $display("ID Stage: rs1=x%0d (%0d), rs2=x%0d (%0d), rd=x%0d", 
+                cpu.rs1, cpu.reg_read_data1, cpu.rs2, cpu.reg_read_data2, cpu.rd);
+            
+            // Show EX stage activity (removed alu_control as it doesn't exist)
+            $display("EX Stage: ALU Result=%0h", cpu.alu_result);
+            
+            // Show MEM stage activity
+            if (cpu.mem_write)
+                $display("MEM Stage: Writing %0d to address %0d", 
+                    cpu.reg_read_data2, cpu.alu_result);
+            if (cpu.mem_read)
+                $display("MEM Stage: Reading from address %0d, value=%0d", 
+                    cpu.alu_result, cpu.mem_read_data);
+                
+            // Show WB stage activity
+            if (cpu.reg_write && cpu.rd != 0)
+                $display("WB Stage: Writing %0d to register x%0d", 
+                    cpu.reg_write_data, cpu.rd);
+            
+            // Control signals
+            $display("Control signals: branch=%b, mem_read=%b, mem_to_reg=%b, mem_write=%b, alu_src=%b, reg_write=%b", 
+                cpu.branch, cpu.mem_read, cpu.mem_to_reg, cpu.mem_write, cpu.alu_src, cpu.reg_write);
+            
+        end
     end
     
 endmodule'''

@@ -82,16 +82,16 @@ module cpu_pipelined(
     // Register File ke inputs set karo
     assign rs1 = if_id_instruction[19:15];  // source register 1 ka number
     assign rs2 = if_id_instruction[24:20];  // source register 2 ka number
-    assign rd = if_id_instruction[11:7];    // destination register ka number
+    // assign rd = if_id_instruction[11:7];    // destination register ka number
 
     // Register File - CPU ke registers ko handle karta hai
     register_file reg_file(
         .clk(clk),
         .rs1(rs1),                    // pehla source register
         .rs2(rs2),                    // dusra source register
-        .rd(rd),                      // destination register
+        .rd(reg_rd),                      // destination register
         .write_data(reg_write_data),  // jo value likhni hai
-        .reg_write(reg_write),        // write enable signal
+        .reg_write(mem_wb_reg_write),        // write enable signal
         .read_data1(reg_read_data1),  // pehle register ki value
         .read_data2(reg_read_data2)   // dusre register ki value
     );
@@ -178,10 +178,11 @@ module cpu_pipelined(
         .q({mem_wb_mem_read_data, mem_wb_alu_result, mem_wb_instruction, mem_wb_mem_to_reg, mem_wb_reg_write, mem_wb_nop_instruction})
     );
     
+    wire [4:0] reg_rd;
        
     // register me value write back karo
     assign reg_write_data = mem_wb_mem_to_reg ? mem_wb_mem_read_data : mem_wb_alu_result;  // memory se ya ALU se value select karo
-    assign rd = mem_wb_instruction[11:7];  // destination register ka number
+    assign reg_rd = mem_wb_instruction[11:7];  // destination register ka number
 
     // end_program signal
     assign end_program = mem_wb_nop_instruction;

@@ -13,7 +13,7 @@ module register_file(
     assign read_data1 = (rs1 == 0) ? 64'b0 : registers[rs1];
     assign read_data2 = (rs2 == 0) ? 64'b0 : registers[rs2];
     
-    always @(posedge clk) begin
+    always @(*) begin
         if (reg_write && rd != 0)
             registers[rd] <= write_data;
     end

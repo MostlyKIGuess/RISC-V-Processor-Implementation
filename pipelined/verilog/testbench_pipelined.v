@@ -17,7 +17,7 @@ module testbench_pipelined();
     
     initial begin
         reset = 1;
-        #5 reset = 0;
+        #15 reset = 0;
     end
     
     cpu_pipelined cpu(

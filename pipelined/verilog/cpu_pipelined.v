@@ -6,7 +6,10 @@
 `include "modules/register_file.v"
 `include "modules/data_memory.v"
 `include "modules/control_unit.v"
-`include "modules/param_register.v"
+`include "modules/if_id_register.v"
+`include "modules/id_ex_register.v"
+`include "modules/ex_mem_register.v"
+`include "modules/mem_wb_register.v"
 
 module cpu_pipelined(
     input clk,                  
@@ -37,10 +40,11 @@ module cpu_pipelined(
     wire [63:0] if_id_pc;
     wire [31:0] if_id_instruction;
     
-    param_register #(96) if_id(
+    if_id_register if_id(
         .clk(clk),
         .reset(reset),
-        .d({pc_current,       instruction}),
+        .en(1'b1),
+        .d({pc_current, instruction}),
         .q({  if_id_pc, if_id_instruction})
     );
 
@@ -92,9 +96,10 @@ module cpu_pipelined(
     wire [31:0] id_ex_instruction;
     wire id_ex_branch, id_ex_mem_read, id_ex_mem_write, id_ex_mem_to_reg, id_ex_reg_write, id_ex_alu_src;
     
-    param_register #(230) id_ex(
+    id_ex_register id_ex(
         .clk(clk),
         .reset(reset),
+        .en(1'b1),
         .d({if_id_pc,       reg_read_data1,       reg_read_data2, if_id_instruction,       branch,       mem_read,       mem_write,       mem_to_reg,       reg_write,       alu_src}),
         .q({id_ex_pc, id_ex_reg_read_data1, id_ex_reg_read_data2, id_ex_instruction, id_ex_branch, id_ex_mem_read, id_ex_mem_write, id_ex_mem_to_reg, id_ex_reg_write, id_ex_alu_src})
     );
@@ -129,9 +134,10 @@ module cpu_pipelined(
     wire [31:0] ex_mem_instruction;
     wire ex_mem_zero, ex_mem_branch, ex_mem_mem_read, ex_mem_mem_write, ex_mem_mem_to_reg, ex_mem_reg_write;
     
-    param_register #(294) ex_mem(
+    ex_mem_register ex_mem(
         .clk(clk),
         .reset(reset),
+        .en(1'b1),
         .d({id_ex_pc , alu_result       , id_ex_reg_read_data2 , branch_target       , id_ex_instruction , zero       , id_ex_branch , id_ex_mem_read , id_ex_mem_write , id_ex_mem_to_reg , id_ex_reg_write}),
         .q({ex_mem_pc, ex_mem_alu_result, ex_mem_reg_read_data2, ex_mem_branch_target, ex_mem_instruction, ex_mem_zero, ex_mem_branch, ex_mem_mem_read, ex_mem_mem_write, ex_mem_mem_to_reg, ex_mem_reg_write})
     );
@@ -159,9 +165,10 @@ module cpu_pipelined(
     wire [31:0] mem_wb_instruction;
     wire mem_wb_mem_to_reg, mem_wb_reg_write;
     
-    param_register #(162) mem_wb(
+    mem_wb_register mem_wb(
         .clk(clk),
         .reset(reset),
+        .en(1'b1),
         .d({mem_read_data       , ex_mem_alu_result, ex_mem_instruction, ex_mem_mem_to_reg, ex_mem_reg_write}),
         .q({mem_wb_mem_read_data, mem_wb_alu_result, mem_wb_instruction, mem_wb_mem_to_reg, mem_wb_reg_write})
     );

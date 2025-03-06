@@ -1,16 +1,16 @@
 `timescale 1ns/1ps
 
-module param_register #(parameter WIDTH = 1) (
+module ex_mem_register (
     input wire clk,
     input wire reset,
     input wire en,
-    input wire [WIDTH-1:0] d,
-    output reg [WIDTH-1:0] q
+    input wire [95:0] d,
+    output reg [95:0] q
 );
-    
+
     always @(posedge clk or posedge reset) begin
         if (reset)
-            q <= {WIDTH{1'b0}};
+            q <= {96{1'b0}};
         else if (en)
             q <= d;
     end

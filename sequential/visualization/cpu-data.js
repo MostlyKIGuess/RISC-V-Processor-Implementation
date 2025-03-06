@@ -3,8 +3,8 @@ const cpuData = {
     {
       "time": 15000,
       "pc": 0,
-      "instruction": 10486547,
-      "decodedInstruction": "addi x6, x0, 10",
+      "instruction": 3145875,
+      "decodedInstruction": "addi x1, x0, 3",
       "controlSignals": {
         "branch": false,
         "mem_read": false,
@@ -15,12 +15,12 @@ const cpuData = {
       },
       "registers": [
         0,
+        3,
         0,
         0,
         0,
         0,
         0,
-        10,
         0,
         0,
         0,
@@ -48,7 +48,7 @@ const cpuData = {
         0
       ],
       "changedRegisters": [
-        6
+        1
       ],
       "memory": [
         0,
@@ -308,13 +308,13 @@ const cpuData = {
         0,
         0
       ],
-      "aluResult": 10
+      "aluResult": 3
     },
     {
       "time": 25000,
       "pc": 4,
-      "instruction": 915,
-      "decodedInstruction": "addi x7, x0, 0",
+      "instruction": 7340307,
+      "decodedInstruction": "addi x2, x0, 7",
       "controlSignals": {
         "branch": false,
         "mem_read": false,
@@ -325,12 +325,12 @@ const cpuData = {
       },
       "registers": [
         0,
+        3,
+        7,
         0,
         0,
         0,
         0,
-        0,
-        10,
         0,
         0,
         0,
@@ -358,7 +358,7 @@ const cpuData = {
         0
       ],
       "changedRegisters": [
-        7
+        2
       ],
       "memory": [
         0,
@@ -618,7 +618,7 @@ const cpuData = {
         0,
         0
       ],
-      "aluResult": 0
+      "aluResult": 7
     }
   ]
 };

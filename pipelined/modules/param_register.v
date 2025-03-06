@@ -8,8 +8,8 @@ module param_register #(parameter WIDTH = 1) (
     output reg [WIDTH-1:0] q
 );
     
-    always @(posedge clk or posedge rst) begin
-        if (rst)
+    always @(posedge clk or posedge reset) begin
+        if (reset)
             q <= {WIDTH{1'b0}};
         else if (en)
             q <= d;

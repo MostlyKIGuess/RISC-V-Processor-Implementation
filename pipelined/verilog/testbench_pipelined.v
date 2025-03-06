@@ -3,6 +3,12 @@
 module testbench_pipelined();
     reg clk;
     reg reset;
+
+    integer cycle_count = 0;
+    real execution_time;
+    real execution_time_ms;
+    real execution_time_us;
+    integer execution_time_p;
     
     initial begin
         clk = 0;
@@ -11,7 +17,7 @@ module testbench_pipelined();
     
     initial begin
         reset = 1;
-        #15 reset = 0;
+        #5 reset = 0;
     end
     
     cpu_pipelined cpu(
@@ -20,29 +26,19 @@ module testbench_pipelined();
     );
     
     initial begin
-        cpu.imem.memory[0] = 32'b00000000101000000000010100010011;
-        cpu.imem.memory[1] = 32'b00000000000100000000010110010011;
-        cpu.imem.memory[2] = 32'b00000010000001010000011001100011;
-        cpu.imem.memory[3] = 32'b00000000101100000000011000110011;
-        cpu.imem.memory[4] = 32'b00000000101000000000011010110011;
-        cpu.imem.memory[5] = 32'b00000000000000000000010110010011;
-        cpu.imem.memory[6] = 32'b00000000000001101000100001100011;
-        cpu.imem.memory[7] = 32'b00000000110001011000010110110011;
-        cpu.imem.memory[8] = 32'b11111111111101101000011010010011;
-        cpu.imem.memory[9] = 32'b11111110000000000000101011100011;
-        cpu.imem.memory[10] = 32'b11111111111101010000010100010011;
-        cpu.imem.memory[11] = 32'b00000000000001010000010001100011;
-        cpu.imem.memory[12] = 32'b11111100000000000000111011100011;
-        cpu.imem.memory[13] = 32'b00000000000000000000000000000000;
+        cpu.imem.memory[0] = 32'b00000000001100000000000010010011;
+        cpu.imem.memory[1] = 32'b00000000000000000000000000000000;
     end
 
     
     integer i;
     initial begin
-        $dumpfile("test_results/cpu_sequential_test.vcd");
-        $dumpvars(0, testbench_sequential);
+        $dumpfile("test_results/cpu_pipelined_test.vcd");
+        $dumpvars(0, testbench_pipelined);
         
         @(negedge reset);
+
+        #15;
 
         // Run simulation until a NOP (halt)
         while (cpu.instruction !== 32'b0) begin
@@ -64,6 +60,17 @@ module testbench_pipelined();
         $writememh("modules/data_memory.hex", cpu.dmem.memory);
         $display("\nData memory contents written to 'modules/data_memory.hex'");
 
+        execution_time = cycle_count * 10e-9; // Convert cycles to seconds
+        execution_time_ms = cycle_count * 10e-6; // Convert cycles to milliseconds
+        execution_time_us = cycle_count * 10e-3; // Convert cycles to microseconds
+        execution_time_p = cycle_count * 10000; // Convert cycles to picoseconds
+
+        $display("\nTotal Execution Time:");
+        $display("Seconds: %0.9f s", execution_time);
+        $display("Milliseconds: %0.6f ms", execution_time_ms);
+        $display("Microseconds: %0.3f µs", execution_time_us);
+        $display("Picoseconds: %0d ps", execution_time_p);
+
         $finish;
     end
 
@@ -71,6 +78,7 @@ module testbench_pipelined();
     /// signals boi  LLMs ki jai ho for formatting
     always @(posedge clk) begin
         if (!reset) begin
+            cycle_count = cycle_count + 1;
             $display("\n--------------------------------");
             $display("Time=%0t", $time);
             $display("PC=%h", cpu.pc_current);

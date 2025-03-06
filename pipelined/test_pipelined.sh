@@ -14,8 +14,8 @@ python3 testcases/assembler.py "$TEST_FILE"
 
 echo "Compiling Verilog files..."
 iverilog -o test_results/cpu_test \
-    verilog/cpu_sequential.v \
-    verilog/testbench_sequential.v \
+    verilog/cpu_pipelined.v \
+    verilog/testbench_pipelined.v \
     -I modules/
 
 
@@ -27,19 +27,12 @@ if [ $? -eq 0 ]; then
     vvp test_results/cpu_test | tee test_results/simulation_output.txt
     
     # if you wanna generate waveforms bruhhhh
-    if [ -f test_results/cpu_sequential_test.vcd ]; then
+    if [ -f test_results/cpu_pipelined_test.vcd ]; then
         echo "Generating waveform..."
-        gtkwave test_results/cpu_sequential_test.vcd &
+        gtkwave test_results/cpu_pipelined_test.vcd &
     else
         echo "Error: Waveform file not generated"
     fi
-
-    # visualization
-    echo "Generating visualization data..."
-    python3 visualization/data_converter.py test_results/simulation_output.txt
-
-    echo "Opening visualization in browser..."
-    xdg-open visualization/index.html 2>/dev/null || open visualization/index.html 2>/dev/null || echo "Please open visualization/index.html in your browser"
 
 else
     echo "Error: Compilation failed"

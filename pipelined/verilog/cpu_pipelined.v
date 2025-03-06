@@ -40,17 +40,17 @@ module cpu_pipelined(
     param_register #(96) if_id(
         .clk(clk),
         .reset(reset),
-        .d({pc_current, instruction}),
-        .q({if_id_pc, if_id_instruction})
+        .d({pc_current,       instruction}),
+        .q({  if_id_pc, if_id_instruction})
     );
 
     // control signals - CPU ko batate hai kya karna hai
-    wire mem_read;              // memory se padhna hai
-    wire mem_write;             // memory me likhna hai
-    wire mem_to_reg;            // memory se ya ALU se value aayi hai
-    wire reg_write;             // register me value store karni hai
     wire branch;                // branch instruction hai ya nahi
+    wire mem_read;              // memory se padhna hai
+    wire mem_to_reg;            // memory se ya ALU se value aayi hai
+    wire mem_write;             // memory me likhna hai
     wire alu_src;               // ALU me register ya immediate value use karni hai
+    wire reg_write;             // register me value store karni hai
     
     // register file ke signals
     wire [4:0] rs1;            // sourcereg
@@ -90,13 +90,13 @@ module cpu_pipelined(
     // ID/EX Pipeline Register
     wire [63:0] id_ex_pc, id_ex_reg_read_data1, id_ex_reg_read_data2;
     wire [31:0] id_ex_instruction;
-    wire id_ex_mem_read, id_ex_mem_write, id_ex_mem_to_reg, id_ex_reg_write, id_ex_branch, id_ex_alu_src;
+    wire id_ex_branch, id_ex_mem_read, id_ex_mem_write, id_ex_mem_to_reg, id_ex_reg_write, id_ex_alu_src;
     
     param_register #(230) id_ex(
         .clk(clk),
         .reset(reset),
-        .d({if_id_pc, reg_read_data1, reg_read_data2, if_id_instruction, mem_read, mem_write, mem_to_reg, reg_write, branch, alu_src}),
-        .q({id_ex_pc, id_ex_reg_read_data1, id_ex_reg_read_data2, id_ex_instruction, id_ex_mem_read, id_ex_mem_write, id_ex_mem_to_reg, id_ex_reg_write, id_ex_branch, id_ex_alu_src})
+        .d({if_id_pc,       reg_read_data1,       reg_read_data2, if_id_instruction,       branch,       mem_read,       mem_write,       mem_to_reg,       reg_write,       alu_src}),
+        .q({id_ex_pc, id_ex_reg_read_data1, id_ex_reg_read_data2, id_ex_instruction, id_ex_branch, id_ex_mem_read, id_ex_mem_write, id_ex_mem_to_reg, id_ex_reg_write, id_ex_alu_src})
     );
 
     // ALU ke signals
@@ -120,24 +120,25 @@ module cpu_pipelined(
 
     // branch instruction ke liye
     wire [63:0] branch_target;  // jump kaha karna hai
-    wire branch_taken;          // jump karna hai ya nahi
 
     // PC update kaise hoga -> branch ke hisab se
-    assign branch_target = id_ex_pc_current + {{51{id_ex_instruction[31]}}, id_ex_instruction[7], id_ex_instruction[30:25], id_ex_instruction[11:8], 1'b0}; // calculate branch target
-    assign branch_taken = id_ex_branch & zero;                    // branch lena hai ya nahi
-    assign pc_next = branch_taken ? branch_target : pc_current + 4;                       // next PC set karo
+    assign branch_target = id_ex_pc + {{51{id_ex_instruction[31]}}, id_ex_instruction[7], id_ex_instruction[30:25], id_ex_instruction[11:8], 1'b0}; // calculate branch target
 
     // EX/MEM Pipeline Register
-    wire [63:0] ex_mem_alu_result, ex_mem_reg_read_data2;
-    wire [4:0] ex_mem_rd;
-    wire ex_mem_mem_read, ex_mem_mem_write, ex_mem_mem_to_reg, ex_mem_reg_write;
+    wire [63:0] ex_mem_pc, ex_mem_alu_result, ex_mem_reg_read_data2, ex_mem_branch_target;
+    wire [31:0] ex_mem_instruction;
+    wire ex_mem_zero, ex_mem_branch, ex_mem_mem_read, ex_mem_mem_write, ex_mem_mem_to_reg, ex_mem_reg_write;
     
-    param_register #(137) ex_mem(
+    param_register #(294) ex_mem(
         .clk(clk),
         .reset(reset),
-        .d({alu_result, id_ex_reg_read_data2, id_ex_instruction[11:7], id_ex_mem_read, id_ex_mem_write, id_ex_mem_to_reg, id_ex_reg_write}),
-        .q({ex_mem_alu_result, ex_mem_reg_read_data2, ex_mem_rd, ex_mem_mem_read, ex_mem_mem_write, ex_mem_mem_to_reg, ex_mem_reg_write})
+        .d({id_ex_pc , alu_result       , id_ex_reg_read_data2 , branch_target       , id_ex_instruction , zero       , id_ex_branch , id_ex_mem_read , id_ex_mem_write , id_ex_mem_to_reg , id_ex_reg_write}),
+        .q({ex_mem_pc, ex_mem_alu_result, ex_mem_reg_read_data2, ex_mem_branch_target, ex_mem_instruction, ex_mem_zero, ex_mem_branch, ex_mem_mem_read, ex_mem_mem_write, ex_mem_mem_to_reg, ex_mem_reg_write})
     );
+
+    wire branch_taken;          // jump karna hai ya nahi
+    assign branch_taken = ex_mem_branch & ex_mem_zero;                    // branch lena hai ya nahi
+    assign pc_next = branch_taken ? ex_mem_branch_target : ex_mem_pc + 4;                       // next PC set karo
 
     // memory ke signals
     wire signed [63:0] mem_read_data;  // memory se padhi hui value
@@ -149,24 +150,25 @@ module cpu_pipelined(
         .write_data(ex_mem_reg_read_data2),  // jo data likhna hai
         .mem_read(ex_mem_mem_read),          // read signal
         .mem_write(ex_mem_mem_write),        // write signal
-        .read_data(ex_mem_mem_read_data)     // padha hua data
+        .read_data(mem_read_data)     // padha hua data
     );
 
 
     // MEM/WB Pipeline Register
     wire [63:0] mem_wb_mem_read_data, mem_wb_alu_result;
-    wire [4:0] mem_wb_rd;
+    wire [31:0] mem_wb_instruction;
     wire mem_wb_mem_to_reg, mem_wb_reg_write;
     
-    param_register #(135) mem_wb(
+    param_register #(162) mem_wb(
         .clk(clk),
         .reset(reset),
-        .d({mem_read_data, ex_mem_alu_result, ex_mem_rd, ex_mem_mem_to_reg, ex_mem_reg_write}),
-        .q({mem_wb_mem_read_data, mem_wb_alu_result, mem_wb_rd, mem_wb_mem_to_reg, mem_wb_reg_write})
+        .d({mem_read_data       , ex_mem_alu_result, ex_mem_instruction, ex_mem_mem_to_reg, ex_mem_reg_write}),
+        .q({mem_wb_mem_read_data, mem_wb_alu_result, mem_wb_instruction, mem_wb_mem_to_reg, mem_wb_reg_write})
     );
     
        
     // register me value write back karo
     assign reg_write_data = mem_wb_mem_to_reg ? mem_wb_mem_read_data : mem_wb_alu_result;  // memory se ya ALU se value select karo
+    assign rd = mem_wb_instruction[11:7];  // destination register ka number
 
 endmodule

@@ -45,13 +45,20 @@ module cpu_pipelined(
     wire [31:0] if_id_instruction;
     wire if_id_end_instruction, if_id_nop_instruction;
     
+    // check if_id_instruction to see if it is beq(opcode 1100011), send addi x0 x0 0, also sent pc_next = pc_current
+    wire branch_halt;
+    assign branch_halt = if_id_instruction[6:0] == 7'b1100011;
+    wire [31:0] halt_instruction;
+    assign halt_instruction = branch_halt ? 32'b00000000000000000000000000010011 : instruction;
+
     if_id_register if_id(
         .clk(clk),
         .reset(reset),
         .en(1'b1),
-        .d({pc_current, instruction      , nop_instruction}),
+        .d({pc_current, halt_instruction , nop_instruction}),
         .q({if_id_pc  , if_id_instruction, if_id_nop_instruction})
     );
+
 
     // control signals - CPU ko batate hai kya karna hai
     wire branch;                // branch instruction hai ya nahi
@@ -82,7 +89,6 @@ module cpu_pipelined(
     // Register File ke inputs set karo
     assign rs1 = if_id_instruction[19:15];  // source register 1 ka number
     assign rs2 = if_id_instruction[24:20];  // source register 2 ka number
-    // assign rd = if_id_instruction[11:7];    // destination register ka number
 
     // Register File - CPU ke registers ko handle karta hai
     register_file reg_file(
@@ -149,7 +155,7 @@ module cpu_pipelined(
 
     wire branch_taken;          // jump karna hai ya nahi
     assign branch_taken = ex_mem_branch & ex_mem_zero;                    // branch lena hai ya nahi
-    assign pc_next = branch_taken ? ex_mem_branch_target : pc_current + 4;                       // next PC set karo
+    assign pc_next = branch_taken ? ex_mem_branch_target : (branch_halt? pc_current : pc_current + 4);                       // next PC set karo
 
     // memory ke signals
     wire signed [63:0] mem_read_data;  // memory se padhi hui value

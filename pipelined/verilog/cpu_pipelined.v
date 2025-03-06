@@ -149,7 +149,7 @@ module cpu_pipelined(
 
     wire branch_taken;          // jump karna hai ya nahi
     assign branch_taken = ex_mem_branch & ex_mem_zero;                    // branch lena hai ya nahi
-    assign pc_next = branch_taken ? ex_mem_branch_target : ex_mem_pc + 4;                       // next PC set karo
+    assign pc_next = branch_taken ? ex_mem_branch_target : pc_current + 4;                       // next PC set karo
 
     // memory ke signals
     wire signed [63:0] mem_read_data;  // memory se padhi hui value

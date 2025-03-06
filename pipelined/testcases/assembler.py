@@ -40,7 +40,7 @@ def main():
 
         # Second pass: generate machine code
         current_address = 0
-        instruction_index = 1
+        instruction_index = 0
         instructions = []
         
         for line in lines:
@@ -227,7 +227,7 @@ module testbench_pipelined();
         reset = 1;
         #6 reset = 0;
         
-        cpu.imem.memory[0] = 32'b00000000000000000000000000010011;
+
 {instructions}
     
         forever #5 clk = ~clk; 

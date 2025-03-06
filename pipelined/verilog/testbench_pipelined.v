@@ -3,6 +3,8 @@
 module testbench_pipelined();
     reg clk;
     reg reset;
+    wire end_program;
+
 
     integer cycle_count = 0;
     real execution_time;
@@ -17,17 +19,22 @@ module testbench_pipelined();
     
     initial begin
         reset = 1;
-        #15 reset = 0;
+        #6 reset = 0;
     end
     
     cpu_pipelined cpu(
         .clk(clk),
-        .reset(reset)
+        .reset(reset),
+        .end_program(end_program)
     );
     
     initial begin
-        cpu.imem.memory[0] = 32'b00000000001100000000000010010011;
-        cpu.imem.memory[1] = 32'b00000000000000000000000000000000;
+        cpu.imem.memory[0] = 32'b00000000000100000000000010010011;
+        cpu.imem.memory[1] = 32'b00000000001000000000000100010011;
+        cpu.imem.memory[2] = 32'b00000000001100000000000110010011;
+        cpu.imem.memory[3] = 32'b00000000010000000000001000010011;
+        cpu.imem.memory[4] = 32'b00000000010100000000001010010011;
+        cpu.imem.memory[5] = 32'b00000000000000000000000000000000;
     end
 
     
@@ -38,10 +45,8 @@ module testbench_pipelined();
         
         @(negedge reset);
 
-        #15;
-
-        // Run simulation until a NOP (halt)
-        while (cpu.instruction !== 32'b0) begin
+        // Run simulation until end_program is high
+        while (!end_program) begin
             @(posedge clk);
         end
 

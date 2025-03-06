@@ -13,7 +13,8 @@
 
 module cpu_pipelined(
     input clk,                  
-    input reset                 
+    input reset,
+    output end_program           
 );
     // program counter wale baba
     wire [63:0] pc_next;        
@@ -35,17 +36,21 @@ module cpu_pipelined(
         .pc(pc_current),         // current PC se
         .instruction(instruction) // instruction nikalo
     );
+
+    wire nop_instruction;
+    assign nop_instruction = instruction == 0;  // no operation instruction
     
     // IF/ID Pipeline Register
     wire [63:0] if_id_pc;
     wire [31:0] if_id_instruction;
+    wire if_id_end_instruction, if_id_nop_instruction;
     
     if_id_register if_id(
         .clk(clk),
         .reset(reset),
         .en(1'b1),
-        .d({pc_current, instruction}),
-        .q({  if_id_pc, if_id_instruction})
+        .d({pc_current, instruction      , nop_instruction}),
+        .q({if_id_pc  , if_id_instruction, if_id_nop_instruction})
     );
 
     // control signals - CPU ko batate hai kya karna hai
@@ -94,14 +99,14 @@ module cpu_pipelined(
     // ID/EX Pipeline Register
     wire [63:0] id_ex_pc, id_ex_reg_read_data1, id_ex_reg_read_data2;
     wire [31:0] id_ex_instruction;
-    wire id_ex_branch, id_ex_mem_read, id_ex_mem_write, id_ex_mem_to_reg, id_ex_reg_write, id_ex_alu_src;
+    wire id_ex_branch, id_ex_mem_read, id_ex_mem_write, id_ex_mem_to_reg, id_ex_reg_write, id_ex_alu_src, id_ex_nop_instruction;
     
     id_ex_register id_ex(
         .clk(clk),
         .reset(reset),
         .en(1'b1),
-        .d({if_id_pc,       reg_read_data1,       reg_read_data2, if_id_instruction,       branch,       mem_read,       mem_write,       mem_to_reg,       reg_write,       alu_src}),
-        .q({id_ex_pc, id_ex_reg_read_data1, id_ex_reg_read_data2, id_ex_instruction, id_ex_branch, id_ex_mem_read, id_ex_mem_write, id_ex_mem_to_reg, id_ex_reg_write, id_ex_alu_src})
+        .d({if_id_pc,       reg_read_data1,       reg_read_data2, if_id_instruction,       branch,       mem_read,       mem_write,       mem_to_reg,       reg_write,       alu_src, if_id_nop_instruction}),
+        .q({id_ex_pc, id_ex_reg_read_data1, id_ex_reg_read_data2, id_ex_instruction, id_ex_branch, id_ex_mem_read, id_ex_mem_write, id_ex_mem_to_reg, id_ex_reg_write, id_ex_alu_src, id_ex_nop_instruction})
     );
 
     // ALU ke signals
@@ -132,14 +137,14 @@ module cpu_pipelined(
     // EX/MEM Pipeline Register
     wire [63:0] ex_mem_pc, ex_mem_alu_result, ex_mem_reg_read_data2, ex_mem_branch_target;
     wire [31:0] ex_mem_instruction;
-    wire ex_mem_zero, ex_mem_branch, ex_mem_mem_read, ex_mem_mem_write, ex_mem_mem_to_reg, ex_mem_reg_write;
+    wire ex_mem_zero, ex_mem_branch, ex_mem_mem_read, ex_mem_mem_write, ex_mem_mem_to_reg, ex_mem_reg_write, ex_mem_nop_instruction;
     
     ex_mem_register ex_mem(
         .clk(clk),
         .reset(reset),
         .en(1'b1),
-        .d({id_ex_pc , alu_result       , id_ex_reg_read_data2 , branch_target       , id_ex_instruction , zero       , id_ex_branch , id_ex_mem_read , id_ex_mem_write , id_ex_mem_to_reg , id_ex_reg_write}),
-        .q({ex_mem_pc, ex_mem_alu_result, ex_mem_reg_read_data2, ex_mem_branch_target, ex_mem_instruction, ex_mem_zero, ex_mem_branch, ex_mem_mem_read, ex_mem_mem_write, ex_mem_mem_to_reg, ex_mem_reg_write})
+        .d({id_ex_pc , alu_result       , id_ex_reg_read_data2 , branch_target       , id_ex_instruction , zero       , id_ex_branch , id_ex_mem_read , id_ex_mem_write , id_ex_mem_to_reg , id_ex_reg_write , id_ex_nop_instruction}),
+        .q({ex_mem_pc, ex_mem_alu_result, ex_mem_reg_read_data2, ex_mem_branch_target, ex_mem_instruction, ex_mem_zero, ex_mem_branch, ex_mem_mem_read, ex_mem_mem_write, ex_mem_mem_to_reg, ex_mem_reg_write, ex_mem_nop_instruction})
     );
 
     wire branch_taken;          // jump karna hai ya nahi
@@ -163,19 +168,22 @@ module cpu_pipelined(
     // MEM/WB Pipeline Register
     wire [63:0] mem_wb_mem_read_data, mem_wb_alu_result;
     wire [31:0] mem_wb_instruction;
-    wire mem_wb_mem_to_reg, mem_wb_reg_write;
+    wire mem_wb_mem_to_reg, mem_wb_reg_write, mem_wb_nop_instruction;
     
     mem_wb_register mem_wb(
         .clk(clk),
         .reset(reset),
         .en(1'b1),
-        .d({mem_read_data       , ex_mem_alu_result, ex_mem_instruction, ex_mem_mem_to_reg, ex_mem_reg_write}),
-        .q({mem_wb_mem_read_data, mem_wb_alu_result, mem_wb_instruction, mem_wb_mem_to_reg, mem_wb_reg_write})
+        .d({mem_read_data       , ex_mem_alu_result, ex_mem_instruction, ex_mem_mem_to_reg, ex_mem_reg_write, ex_mem_nop_instruction}),
+        .q({mem_wb_mem_read_data, mem_wb_alu_result, mem_wb_instruction, mem_wb_mem_to_reg, mem_wb_reg_write, mem_wb_nop_instruction})
     );
     
        
     // register me value write back karo
     assign reg_write_data = mem_wb_mem_to_reg ? mem_wb_mem_read_data : mem_wb_alu_result;  // memory se ya ALU se value select karo
     assign rd = mem_wb_instruction[11:7];  // destination register ka number
+
+    // end_program signal
+    assign end_program = mem_wb_nop_instruction;
 
 endmodule

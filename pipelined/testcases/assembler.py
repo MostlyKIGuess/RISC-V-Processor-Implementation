@@ -213,6 +213,8 @@ def generate_testbench(instructions):
 module testbench_pipelined();
     reg clk;
     reg reset;
+    wire end_program;
+
 
     integer cycle_count = 0;
     real execution_time;
@@ -227,12 +229,13 @@ module testbench_pipelined();
     
     initial begin
         reset = 1;
-        #15 reset = 0;
+        #6 reset = 0;
     end
     
     cpu_pipelined cpu(
         .clk(clk),
-        .reset(reset)
+        .reset(reset),
+        .end_program(end_program)
     );
     
     initial begin
@@ -247,10 +250,8 @@ module testbench_pipelined();
         
         @(negedge reset);
 
-        #15;
-
-        // Run simulation until a NOP (halt)
-        while (cpu.instruction !== 32'b0) begin
+        // Run simulation until end_program is high
+        while (!end_program) begin
             @(posedge clk);
         end
 

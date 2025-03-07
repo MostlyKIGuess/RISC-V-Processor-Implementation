@@ -25,6 +25,7 @@ module cpu_pipelined(
     program_counter pc_(
         .clk(clk),
         .reset(reset),
+        .enable(~stallF),
         .next_pc(pc),
         .pc(pc_fetch)
     );
@@ -50,6 +51,7 @@ module cpu_pipelined(
     fetch_decode_register f_d_reg(
         .clk(clk),
         .reset(reset),
+        .enable(~stallD),
         .d({pc_4fetch , instr_fetch , eop}),
         .q({pc_4decode, instr_decode, eop_decode})
     );
@@ -92,6 +94,7 @@ module cpu_pipelined(
     decode_execute_register d_e_reg(
         .clk(clk),
         .reset(reset),
+        .flush(flushE),
         .d({read_data1_decode,  read_data2_decode , immed_decode , instr_decode , pc_4decode , branch_decode , mem_to_reg_decode , mem_write_decode , alu_src_decode , reg_write_decode , eop_decode}),
         .q({read_data1_execute, read_data2_execute, immed_execute, instr_execute, pc_4execute, branch_execute, mem_to_reg_execute, mem_write_execute, alu_src_execute, reg_write_execute, eop_execute})
     );
@@ -150,7 +153,7 @@ module cpu_pipelined(
         .address(alu_result_memory),
         .write_data(read_data2_memory),
         .read_data(data_result_memory),
-        .mem_read(mem_read_memory),
+        .mem_read(reg_write_memory),
         .mem_write(mem_write_memory)
     );
 
@@ -172,8 +175,10 @@ module cpu_pipelined(
     assign end_program = eop_writeback;
 
     wire [1:0] forwardAE, forwardBE;
+    wire stallF, stallD, flushE;
 
     hazard_unit haz(
+        
         .rs1E(instr_execute[19:15]),
         .rs2E(instr_execute[24:20]),
         .write_regM(instr_memory[11:7]),
@@ -181,7 +186,16 @@ module cpu_pipelined(
         .reg_writeM(reg_write_memory),
         .reg_writeW(reg_write_writeback),
         .forwardAE(forwardAE),
-        .forwardBE(forwardBE)
+        .forwardBE(forwardBE),
+
+        .rs1D(rs1_decode),
+        .rs2D(rs2_decode),
+        .rdE(instr_execute[11:7]),
+        .mem_to_regE(mem_to_reg_execute),
+        .stallF(stallF),
+        .stallD(stallD),
+        .flushE(flushE)
+
     );
 
 endmodule

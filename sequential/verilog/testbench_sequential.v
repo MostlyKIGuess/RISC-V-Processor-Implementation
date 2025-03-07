@@ -1,4 +1,4 @@
-nb`timescale 1ns/1ps
+`timescale 1ns/1ps
 
 module testbench_sequential();
     reg clk;
@@ -26,10 +26,10 @@ module testbench_sequential();
     );
     
     initial begin
-        cpu.imem.memory[0] = 32'b00000000000000000000100001100011;
-        cpu.imem.memory[1] = 32'b00000000010000000000001010010011;
-        cpu.imem.memory[2] = 32'b00000000010000000000001100010011;
-        cpu.imem.memory[3] = 32'b00000000010000000000001110010011;
+        cpu.imem.memory[0] = 32'b00000000000000000000011001100011;
+        cpu.imem.memory[1] = 32'b00000000010000000000001100010011;
+        cpu.imem.memory[2] = 32'b00000000100000000000001110010011;
+        cpu.imem.memory[3] = 32'b00000000010000000000001010010011;
         cpu.imem.memory[4] = 32'b00000000000000000000000000000000;
     end
 

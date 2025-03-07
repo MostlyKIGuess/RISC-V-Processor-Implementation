@@ -1,5 +1,6 @@
 `timescale 1ns/1ps
 
+`include "modules/misc/mux3to1.v"
 `include "modules/alu.v"
 `include "modules/program_counter.v"
 `include "modules/instruction_memory.v"
@@ -11,6 +12,7 @@
 `include "modules/decode_execute_register.v"
 `include "modules/execute_memory_register.v"
 `include "modules/memory_writeback_register.v"
+`include "modules/hazard_unit.v"
 
 
 module cpu_pipelined(
@@ -90,18 +92,36 @@ module cpu_pipelined(
     decode_execute_register d_e_reg(
         .clk(clk),
         .reset(reset),
-        .d({read_data1_decode, read_data2_decode , immed_decode , instr_decode , pc_4decode , branch_decode , mem_to_reg_decode , mem_write_decode , alu_src_decode , reg_write_decode , eop_decode}),
-        .q({read_data1_execute,read_data2_execute, immed_execute, instr_execute, pc_4execute, branch_execute, mem_to_reg_execute, mem_write_execute, alu_src_execute, reg_write_execute, eop_execute})
+        .d({read_data1_decode,  read_data2_decode , immed_decode , instr_decode , pc_4decode , branch_decode , mem_to_reg_decode , mem_write_decode , alu_src_decode , reg_write_decode , eop_decode}),
+        .q({read_data1_execute, read_data2_execute, immed_execute, instr_execute, pc_4execute, branch_execute, mem_to_reg_execute, mem_write_execute, alu_src_execute, reg_write_execute, eop_execute})
     );
 
     wire zero_execute, alu_src_execute;
     wire [31:0] instr_execute;
     wire [63:0] read_data1_execute, read_data2_execute, immed_execute, alu_result_execute, pc_4execute;
 
+    wire [63:0] forwarding_AE, forwarding_BE;
+
+    mux3to1 alu_in1(
+        .in0(read_data1_execute),
+        .in1(result_writeback),
+        .in2(alu_result_memory),
+        .sel(forwardAE),
+        .out(forwarding_AE)
+    );
+
+    mux3to1 alu_in2(
+        .in0(read_data2_execute),
+        .in1(result_writeback),
+        .in2(alu_result_memory),
+        .sel(forwardBE),
+        .out(forwarding_BE)
+    );
+
     alu main_alu(
         .instruction(instr_execute),
-        .in1(read_data1_execute),
-        .in2(alu_src_execute ? immed_execute : read_data2_execute),
+        .in1(forwarding_AE),
+        .in2(alu_src_execute ? immed_execute : forwarding_BE),
         .out(alu_result_execute),
         .zero(zero_execute)
     );
@@ -150,5 +170,18 @@ module cpu_pipelined(
     assign rd_writeback = instr_writeback[11:7];
 
     assign end_program = eop_writeback;
+
+    wire [1:0] forwardAE, forwardBE;
+
+    hazard_unit haz(
+        .rs1E(instr_execute[19:15]),
+        .rs2E(instr_execute[24:20]),
+        .write_regM(instr_memory[11:7]),
+        .write_regW(instr_writeback[11:7]),
+        .reg_writeM(reg_write_memory),
+        .reg_writeW(reg_write_writeback),
+        .forwardAE(forwardAE),
+        .forwardBE(forwardBE)
+    );
 
 endmodule

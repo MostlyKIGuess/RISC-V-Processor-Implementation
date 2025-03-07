@@ -15,7 +15,13 @@ module hazard_unit(
     input mem_to_regE,
     output reg stallF,
     output reg stallD,
-    output reg flushE
+    output reg flushE,
+
+    input branchD,
+    input reg_writeE,
+    input mem_to_regM,
+    output reg forwardAD,
+    output reg forwardBD
 
 );
 
@@ -37,12 +43,21 @@ module hazard_unit(
             forwardBE = 2'b00;
     end
 
+    always @(*) begin
+        forwardAD = (rs1D!=0) & (rs1D==write_regM) & reg_writeM;
+        forwardBD = (rs2D!=0) & (rs2D==write_regM) & reg_writeM;
+    end
+
     wire lwstall;
     assign lwstall = ((rs1D==rdE) | (rs2D==rdE)) & mem_to_regE;
+
+    wire branchstall;
+    assign branchstall = (branchD & reg_writeE & (rdE==rs1D | rdE==rs2D)) | (branchD & mem_to_regM & (write_regM==rs1D | write_regM==rs2D));
+
     always @(*) begin
-        stallF = lwstall;
-        stallD = lwstall;
-        flushE = lwstall;
+        stallF = lwstall | branchstall;
+        stallD = lwstall | branchstall;
+        flushE = lwstall | branchstall;
     end
 
 endmodule

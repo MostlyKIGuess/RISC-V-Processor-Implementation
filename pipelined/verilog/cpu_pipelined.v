@@ -33,7 +33,7 @@ module cpu_pipelined(
     wire [63:0] pc_4fetch;
     assign pc_4fetch = pc_fetch + 4;
 
-    assign pc = pc_src_memory ? pc_branch_memory : pc_4fetch;
+    assign pc = pc_src_decode ? pc_branch_decode : pc_4fetch;
 
     wire [31:0] instr_fetch;
 
@@ -51,6 +51,7 @@ module cpu_pipelined(
     fetch_decode_register f_d_reg(
         .clk(clk),
         .reset(reset),
+        .flush(pc_src_decode),
         .enable(~stallD),
         .d({pc_4fetch , instr_fetch , eop}),
         .q({pc_4decode, instr_decode, eop_decode})
@@ -91,6 +92,10 @@ module cpu_pipelined(
         .reg_write(reg_write_decode)
     );
 
+    wire pc_src_decode;
+    assign pc_src_decode = branch_decode & ((forwardAD ? alu_result_memory : read_data1_decode) == (forwardBD ? alu_result_memory : read_data2_decode));
+    assign pc_branch_decode = pc_4decode + (immed_decode << 1);
+
     decode_execute_register d_e_reg(
         .clk(clk),
         .reset(reset),
@@ -99,7 +104,7 @@ module cpu_pipelined(
         .q({read_data1_execute, read_data2_execute, immed_execute, instr_execute, pc_4execute, branch_execute, mem_to_reg_execute, mem_write_execute, alu_src_execute, reg_write_execute, eop_execute})
     );
 
-    wire zero_execute, alu_src_execute;
+    wire alu_src_execute;
     wire [31:0] instr_execute;
     wire [63:0] read_data1_execute, read_data2_execute, immed_execute, alu_result_execute, pc_4execute;
 
@@ -125,24 +130,17 @@ module cpu_pipelined(
         .instruction(instr_execute),
         .in1(forwarding_AE),
         .in2(alu_src_execute ? immed_execute : forwarding_BE),
-        .out(alu_result_execute),
-        .zero(zero_execute)
+        .out(alu_result_execute)
     );
-
-    wire [63:0] branch_target_execute, pc_branch_memory;
-    assign branch_target_execute = pc_4execute + (immed_execute << 1);
 
     wire branch_execute, mem_to_reg_execute, mem_write_execute, reg_write_execute;
 
     execute_memory_register e_m_reg(
         .clk(clk),
         .reset(reset),
-        .d({alu_result_execute, zero_execute, read_data2_execute, instr_execute, branch_target_execute, branch_execute, mem_to_reg_execute, mem_write_execute, reg_write_execute, eop_execute}),
-        .q({alu_result_memory , zero_memory , read_data2_memory , instr_memory , pc_branch_memory     , branch_memory , mem_to_reg_memory , mem_write_memory , reg_write_memory , eop_memory})
+        .d({alu_result_execute, read_data2_execute, instr_execute, branch_execute, mem_to_reg_execute, mem_write_execute, reg_write_execute, eop_execute}),
+        .q({alu_result_memory , read_data2_memory , instr_memory , branch_memory , mem_to_reg_memory , mem_write_memory , reg_write_memory , eop_memory})
     );
-
-    wire pc_src_memory, zero_memory, branch_memory;
-    assign pc_src_memory = zero_memory & branch_memory;
 
     wire mem_read_memory, mem_write_memory, mem_to_reg_memory, reg_write_memory;
     wire [31:0] instr_memory;
@@ -176,6 +174,7 @@ module cpu_pipelined(
 
     wire [1:0] forwardAE, forwardBE;
     wire stallF, stallD, flushE;
+    wire forwardAD, forwardBD;
 
     hazard_unit haz(
         
@@ -194,7 +193,13 @@ module cpu_pipelined(
         .mem_to_regE(mem_to_reg_execute),
         .stallF(stallF),
         .stallD(stallD),
-        .flushE(flushE)
+        .flushE(flushE),
+
+        .branchD(branch_decode),
+        .reg_writeE(reg_write_execute),
+        .mem_to_regM(mem_to_reg_memory),
+        .forwardAD(forwardAD),
+        .forwardBD(forwardBD)
 
     );
 

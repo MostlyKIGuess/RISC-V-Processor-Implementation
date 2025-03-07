@@ -1,7 +1,7 @@
 begin:
     ld x2, 0(x0)
     addi x4, x2, 1
-    add x8, x6, 2
+    addi x8, x2, 2
     add x9, x4, x2
 
 end:

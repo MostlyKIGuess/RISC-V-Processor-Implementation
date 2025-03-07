@@ -4,8 +4,7 @@ module data_memory(
     input signed [63:0] write_data,
     output reg signed [63:0] read_data,
     input mem_read,
-    input mem_write,
-    input instruction
+    input mem_write
 );
     reg [7:0] memory [0:1023]; // 1KB memory (byte-addressable)
 

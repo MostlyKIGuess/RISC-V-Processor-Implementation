@@ -1,12 +1,12 @@
 module register_file(
     input clk,
+    input reg_write,
     input [4:0] rs1,
     input [4:0] rs2,
     input [4:0] rd,
-    input signed  [63:0] write_data,
-    input reg_write,
-    output signed  [63:0] read_data1,
-    output signed  [63:0] read_data2
+    output signed [63:0] read_data1,
+    output signed [63:0] read_data2,
+    input signed [63:0] write_data
 );
     reg signed [63:0] registers [0:31];
     

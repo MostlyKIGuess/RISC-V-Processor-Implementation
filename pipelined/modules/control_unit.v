@@ -1,7 +1,6 @@
 module control_unit(
     input [31:0] instruction,
     output reg branch,
-    output reg mem_read,
     output reg mem_to_reg,
     output reg mem_write,
     output reg alu_src,
@@ -14,7 +13,6 @@ module control_unit(
         case(opcode)
             7'b0110011: begin    // R-type 
                 branch = 0;
-                mem_read = 0;
                 mem_to_reg = 0;
                 mem_write = 0;
                 alu_src = 0;     // Use register for operand B
@@ -23,7 +21,6 @@ module control_unit(
             
             7'b0000011: begin    // Load instructions (ld)
                 branch = 0;
-                mem_read = 1;
                 mem_to_reg = 1;
                 mem_write = 0;
                 alu_src = 1;     // Use immediate for address
@@ -32,7 +29,6 @@ module control_unit(
             
             7'b0100011: begin    // Store instructions (sd)
                 branch = 0;
-                mem_read = 0;
                 mem_to_reg = 0;
                 mem_write = 1;
                 alu_src = 1;     // Use immediate for address
@@ -41,7 +37,6 @@ module control_unit(
             
             7'b1100011: begin    // Branch instructions (beq)
                 branch = 1;
-                mem_read = 0;
                 mem_to_reg = 0;
                 mem_write = 0;
                 alu_src = 0;     // Use register for comparison
@@ -50,7 +45,6 @@ module control_unit(
 
             7'b0010011: begin    // I-type instructions (addi)
                 branch = 0;
-                mem_read = 0;
                 mem_to_reg = 0;
                 mem_write = 0;
                 alu_src = 1;     // Use immediate
@@ -59,7 +53,6 @@ module control_unit(
             
             default: begin       // Invalid instruction
                 branch = 0;
-                mem_read = 0;
                 mem_to_reg = 0;
                 mem_write = 0;
                 alu_src = 0;

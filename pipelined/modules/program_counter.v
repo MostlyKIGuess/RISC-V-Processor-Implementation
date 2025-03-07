@@ -2,7 +2,6 @@ module program_counter(
     input clk,
     input reset,
     input [63:0] next_pc,
-    // input stall,
     output reg [63:0] pc
 );
     always @(posedge clk or posedge reset) begin

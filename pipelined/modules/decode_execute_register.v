@@ -1,17 +1,16 @@
 `timescale 1ns/1ps
 
-module ex_mem_register (
+module decode_execute_register (
     input wire clk,
     input wire reset,
-    input wire en,
-    input wire [294:0] d,
-    output reg [294:0] q
+    input wire [293:0] d,
+    output reg [293:0] q
 );
-
+    
     always @(posedge clk or posedge reset) begin
         if (reset)
-            q <= {295{1'b0}};
-        else if (en)
+            q <= {294{1'b0}};
+        else
             q <= d;
     end
     

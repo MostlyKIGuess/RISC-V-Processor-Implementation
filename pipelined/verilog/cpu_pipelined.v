@@ -6,196 +6,149 @@
 `include "modules/register_file.v"
 `include "modules/data_memory.v"
 `include "modules/control_unit.v"
-`include "modules/if_id_register.v"
-`include "modules/id_ex_register.v"
-`include "modules/ex_mem_register.v"
-`include "modules/mem_wb_register.v"
+`include "modules/immediate_gen.v"
+`include "modules/fetch_decode_register.v"
+`include "modules/decode_execute_register.v"
+`include "modules/execute_memory_register.v"
+`include "modules/memory_writeback_register.v"
+
 
 module cpu_pipelined(
     input clk,                  
     input reset,
     output end_program           
 );
-    // program counter wale baba
-    wire [63:0] pc_next;        
-    wire [63:0] pc_current;    
+    wire [63:0] pc, pc_fetch;
 
-    // instruction fetch se aaya hua
-    wire [31:0] instruction;  
-
-    // Program Counter - instruction address ko track karta hai
-    program_counter pc(
+    program_counter pc_(
         .clk(clk),
         .reset(reset),
-        .next_pc(pc_next),      // agli instruction ka address
-        // .stall(branch_stall),
-        .pc(pc_current)         // current instruction ka address
+        .next_pc(pc),
+        .pc(pc_fetch)
     );
 
+    wire [63:0] pc_4fetch;
+    assign pc_4fetch = pc_fetch + 4;
 
-    // program instructions ko store karta hai
-    instruction_memory imem( // REMEMBER INITIALIZED AS imem, so you can do cpu.imem.memory[0] in testbench
-        .pc(pc_current),         // current PC se
-        .instruction(instruction) // instruction nikalo
+    assign pc = pc_src_memory ? pc_branch_memory : pc_4fetch;
+
+    wire [31:0] instr_fetch;
+
+    instruction_memory imem(
+        .address(pc_fetch),
+        .instruction(instr_fetch)
     );
 
-    wire nop_instruction;
-    assign nop_instruction = instruction == -1;  // no operation instruction
-    
-    // IF/ID Pipeline Register
-    wire [63:0] if_id_pc;
-    wire [31:0] if_id_instruction;
-    wire if_id_end_instruction, if_id_nop_instruction;
-    
-    // check if_id_instruction to see if it is beq(opcode 1100011), send addi x0 x0 0, also sent pc_next = pc_current
-    wire branch_stall;
-    assign branch_stall = if_id_instruction[6:0] == 7'b1100011;
-    wire [31:0] stall_instruction;
-    assign stall_instruction = branch_stall ? 32'b00000000000000000000000000010011 : instruction;
-    // 32'b00000000000000000000000000010011
+    wire eop, eop_decode, eop_execute, eop_memory, eop_writeback;
+    assign eop = instr_fetch == -1;
 
-    if_id_register if_id(
+    wire [31:0] instr_decode;
+    wire [63:0] pc_4decode;
+
+    fetch_decode_register f_d_reg(
         .clk(clk),
         .reset(reset),
-        .en(1'b1),
-        .d({pc_current, stall_instruction, nop_instruction}),
-        .q({if_id_pc  , if_id_instruction, if_id_nop_instruction})
+        .d({pc_4fetch , instr_fetch , eop}),
+        .q({pc_4decode, instr_decode, eop_decode})
     );
-
-
-    // control signals - CPU ko batate hai kya karna hai
-    wire branch;                // branch instruction hai ya nahi
-    wire mem_read;              // memory se padhna hai
-    wire mem_to_reg;            // memory se ya ALU se value aayi hai
-    wire mem_write;             // memory me likhna hai
-    wire alu_src;               // ALU me register ya immediate value use karni hai
-    wire reg_write;             // register me value store karni hai
     
-    // register file ke signals
-    wire [4:0] rs1;            // sourcereg
-    wire [4:0] rs2;            // sourcereg
-    wire [4:0] rd;             // destination regi
-    wire signed [63:0] reg_write_data;    
-    wire signed [63:0] reg_read_data1;    
-    wire signed [63:0] reg_read_data2; 
+    wire [4:0] rs1_decode, rs2_decode;
+    wire [63:0] read_data1_decode, read_data2_decode;
 
-    control_unit ctrl(
-        .instruction(if_id_instruction),  // instruction decode karke
-        .branch(branch),            // branch instruction hai ya nahi
-        .mem_read(mem_read),        // memory se padhna hai
-        .mem_to_reg(mem_to_reg),    // memory se ya ALU se value aayi hai
-        .mem_write(mem_write),      // memory me likhna hai
-        .alu_src(alu_src),          // ALU me register ya immediate value use karni hai
-        .reg_write(reg_write)       // register me value store karni hai
-    );
+    assign rs1_decode = instr_decode[19:15];
+    assign rs2_decode = instr_decode[24:20];
 
-    // Register File ke inputs set karo
-    assign rs1 = if_id_instruction[19:15];  // source register 1 ka number
-    assign rs2 = if_id_instruction[24:20];  // source register 2 ka number
-
-    // Register File - CPU ke registers ko handle karta hai
     register_file reg_file(
         .clk(clk),
-        .rs1(rs1),                    // pehla source register
-        .rs2(rs2),                    // dusra source register
-        .rd(reg_rd),                      // destination register
-        .write_data(reg_write_data),  // jo value likhni hai
-        .reg_write(mem_wb_reg_write),        // write enable signal
-        .read_data1(reg_read_data1),  // pehle register ki value
-        .read_data2(reg_read_data2)   // dusre register ki value
+        .reg_write(reg_write_writeback),
+        .rs1(rs1_decode),
+        .rs2(rs2_decode),
+        .rd(rd_writeback),
+        .read_data1(read_data1_decode),
+        .read_data2(read_data2_decode),
+        .write_data(result_writeback)
     );
 
-    // ID/EX Pipeline Register
-    wire [63:0] id_ex_pc, id_ex_reg_read_data1, id_ex_reg_read_data2;
-    wire [31:0] id_ex_instruction;
-    wire id_ex_branch, id_ex_mem_read, id_ex_mem_write, id_ex_mem_to_reg, id_ex_reg_write, id_ex_alu_src, id_ex_nop_instruction;
+    wire [63:0] immed_decode;
 
-    id_ex_register id_ex(
+    immediate_gen immed_gen(
+        .instruction(instr_decode),
+        .immediate_extended(immed_decode)
+    );
+
+    wire branch_decode, mem_to_reg_decode, mem_write_decode, alu_src_decode, reg_write_decode;
+
+    control_unit ctrl(
+        .instruction(instr_decode),
+        .branch(branch_decode),
+        .mem_to_reg(mem_to_reg_decode),
+        .mem_write(mem_write_decode),
+        .alu_src(alu_src_decode),
+        .reg_write(reg_write_decode)
+    );
+
+    decode_execute_register d_e_reg(
         .clk(clk),
         .reset(reset),
-        .en(1'b1),
-        .d({if_id_pc,       reg_read_data1,       reg_read_data2, if_id_instruction,       branch,       mem_read,       mem_write,       mem_to_reg,       reg_write,       alu_src, if_id_nop_instruction}),
-        .q({id_ex_pc, id_ex_reg_read_data1, id_ex_reg_read_data2, id_ex_instruction, id_ex_branch, id_ex_mem_read, id_ex_mem_write, id_ex_mem_to_reg, id_ex_reg_write, id_ex_alu_src, id_ex_nop_instruction})
+        .d({read_data1_decode, read_data2_decode , immed_decode , instr_decode , pc_4decode , branch_decode , mem_to_reg_decode , mem_write_decode , alu_src_decode , reg_write_decode , eop_decode}),
+        .q({read_data1_execute,read_data2_execute, immed_execute, instr_execute, pc_4execute, branch_execute, mem_to_reg_execute, mem_write_execute, alu_src_execute, reg_write_execute, eop_execute})
     );
 
-    // ALU ke signals
-    wire signed [63:0] alu_result;     // ALU ka final answer
-    wire signed [63:0] alu_operand2;   // ALU ka dusra input (reg ya immediate value)
-    wire zero;                        // ALU ka zero flag
+    wire zero_execute, alu_src_execute;
+    wire [31:0] instr_execute;
+    wire [63:0] read_data1_execute, read_data2_execute, immed_execute, alu_result_execute, pc_4execute;
 
-    // ALU ka dusra operand select karo
-    wire [63:0] temp;
-    assign temp = (id_ex_instruction[6:0]==7'b0010011 || id_ex_instruction[6:0]==7'b0000011) ? {{53{id_ex_instruction[31]}}, id_ex_instruction[30:20]} : {{53{id_ex_instruction[31]}},{id_ex_instruction[30:25]},{id_ex_instruction[11:7]}};
-    assign alu_operand2 = id_ex_alu_src ? temp : id_ex_reg_read_data2;  // immediate ya register value
-
-    // ALU - actual calculation karta hai
     alu main_alu(
-        .instruction(id_ex_instruction),     // instruction decode karke
-        .in1(id_ex_reg_read_data1),         // pehla operand
-        .in2(alu_operand2),               // dusra operand
-        .out(alu_result),            // result nikalo
-        .zero(zero)
+        .instruction(instr_execute),
+        .in1(read_data1_execute),
+        .in2(alu_src_execute ? immed_execute : read_data2_execute),
+        .out(alu_result_execute),
+        .zero(zero_execute)
     );
 
-    // branch instruction ke liye
-    wire [63:0] branch_target;  // jump kaha karna hai
+    wire [63:0] branch_target_execute, pc_branch_memory;
+    assign branch_target_execute = pc_4execute + (immed_execute << 1);
 
-    // PC update kaise hoga -> branch ke hisab se
-    assign branch_target = id_ex_pc + {{51{id_ex_instruction[31]}}, id_ex_instruction[7], id_ex_instruction[30:25], id_ex_instruction[11:8], 1'b0}; // calculate branch target
+    wire branch_execute, mem_to_reg_execute, mem_write_execute, reg_write_execute;
 
-    // EX/MEM Pipeline Register
-    wire [63:0] ex_mem_pc, ex_mem_alu_result, ex_mem_reg_read_data2, ex_mem_branch_target;
-    wire [31:0] ex_mem_instruction;
-    wire ex_mem_zero, ex_mem_branch, ex_mem_mem_read, ex_mem_mem_write, ex_mem_mem_to_reg, ex_mem_reg_write, ex_mem_nop_instruction;
-    
-    ex_mem_register ex_mem(
+    execute_memory_register e_m_reg(
         .clk(clk),
         .reset(reset),
-        .en(1'b1),
-        .d({id_ex_pc , alu_result       , id_ex_reg_read_data2 , branch_target       , id_ex_instruction , zero       , id_ex_branch , id_ex_mem_read , id_ex_mem_write , id_ex_mem_to_reg , id_ex_reg_write , id_ex_nop_instruction}),
-        .q({ex_mem_pc, ex_mem_alu_result, ex_mem_reg_read_data2, ex_mem_branch_target, ex_mem_instruction, ex_mem_zero, ex_mem_branch, ex_mem_mem_read, ex_mem_mem_write, ex_mem_mem_to_reg, ex_mem_reg_write, ex_mem_nop_instruction})
+        .d({alu_result_execute, zero_execute, read_data2_execute, instr_execute, branch_target_execute, branch_execute, mem_to_reg_execute, mem_write_execute, reg_write_execute, eop_execute}),
+        .q({alu_result_memory , zero_memory , read_data2_memory , instr_memory , pc_branch_memory     , branch_memory , mem_to_reg_memory , mem_write_memory , reg_write_memory , eop_memory})
     );
 
-    wire branch_taken;          // jump karna hai ya nahi
-    // assign branch_taken = id_ex_branch & zero;                            // branch lena hai ya nahi
-    // assign pc_next = branch_taken ? branch_target : pc_current + 4;         // next PC set karo
-    assign branch_taken = ex_mem_branch & ex_mem_zero;                    // branch lena hai ya nahi
-    assign pc_next = branch_taken ? ex_mem_branch_target : pc_current + 4; // next PC set karo
+    wire pc_src_memory, zero_memory, branch_memory;
+    assign pc_src_memory = zero_memory & branch_memory;
 
-    // memory ke signals
-    wire signed [63:0] mem_read_data;  // memory se padhi hui value
+    wire mem_read_memory, mem_write_memory, mem_to_reg_memory, reg_write_memory;
+    wire [31:0] instr_memory;
+    wire [63:0] alu_result_memory, read_data2_memory, result_memory, data_result_memory;
 
-    // Data Memory - data store karne ke liye
-    data_memory dmem( // REMEMBER INITIALIZED AS dmem, so you can do cpu.dmem.memory[0] in testbench
+    data_memory dmem(
         .clk(clk),
-        .address(ex_mem_alu_result),         // memory address
-        .write_data(ex_mem_reg_read_data2),  // jo data likhna hai
-        .mem_read(ex_mem_mem_read),          // read signal
-        .mem_write(ex_mem_mem_write),        // write signal
-        .read_data(mem_read_data)     // padha hua data
+        .address(alu_result_memory),
+        .write_data(read_data2_memory),
+        .read_data(data_result_memory),
+        .mem_read(mem_read_memory),
+        .mem_write(mem_write_memory)
     );
 
-
-    // MEM/WB Pipeline Register
-    wire [63:0] mem_wb_mem_read_data, mem_wb_alu_result;
-    wire [31:0] mem_wb_instruction;
-    wire mem_wb_mem_to_reg, mem_wb_reg_write, mem_wb_nop_instruction;
-    
-    mem_wb_register mem_wb(
+    memory_writeback_register m_w_reg(
         .clk(clk),
         .reset(reset),
-        .en(1'b1),
-        .d({mem_read_data       , ex_mem_alu_result, ex_mem_instruction, ex_mem_mem_to_reg, ex_mem_reg_write, ex_mem_nop_instruction}),
-        .q({mem_wb_mem_read_data, mem_wb_alu_result, mem_wb_instruction, mem_wb_mem_to_reg, mem_wb_reg_write, mem_wb_nop_instruction})
+        .d({alu_result_memory   , data_result_memory   , instr_memory   , reg_write_memory   , mem_to_reg_memory   , eop_memory}),
+        .q({alu_result_writeback, data_result_writeback, instr_writeback, reg_write_writeback, mem_to_reg_writeback, eop_writeback})
     );
-    
-    wire [4:0] reg_rd;
-       
-    // register me value write back karo
-    assign reg_write_data = mem_wb_mem_to_reg ? mem_wb_mem_read_data : mem_wb_alu_result;  // memory se ya ALU se value select karo
-    assign reg_rd = mem_wb_instruction[11:7];  // destination register ka number
 
-    // end_program signal
-    assign end_program = mem_wb_nop_instruction;
+    wire mem_to_reg_writeback, reg_write_writeback;
+    wire [4:0] rd_writeback;
+    wire [31:0] instr_writeback;
+    wire [63:0] data_result_writeback, alu_result_writeback, result_writeback;
+
+    assign result_writeback = mem_to_reg_writeback ? data_result_writeback : alu_result_writeback;
+    assign rd_writeback = instr_writeback[11:7];
+
+    assign end_program = eop_writeback;
 
 endmodule

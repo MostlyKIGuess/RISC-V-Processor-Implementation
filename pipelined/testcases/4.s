@@ -1,14 +1,15 @@
 begin:
-    beq x0, x0, end
+    addi x4, x0, 1
+    addi x8, x0, 1
+    addi x8, x0, 1
+    beq x0, x4, L1
+    addi x6, x0, 4
 
 L1:
     addi x5, x0, 4
 
-L2:
-    addi x6, x0, 4
-
-L3:
-    addi x7, x0, 4
-
 end:
     nop
+
+
+# both x5 and x6

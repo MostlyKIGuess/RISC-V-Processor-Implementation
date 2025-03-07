@@ -29,7 +29,7 @@ if [ $? -eq 0 ]; then
     # if you wanna generate waveforms bruhhhh
     if [ -f test_results/cpu_pipelined_test.vcd ]; then
         echo "Generating waveform..."
-        gtkwave test_results/cpu_pipelined_test.vcd &
+        gtkwave -A --rcvar 'fontname_signals Monospace 12' --rcvar 'fontname_waves Monospace 12' test_results/cpu_pipelined_test.vcd &
     else
         echo "Error: Waveform file not generated"
     fi

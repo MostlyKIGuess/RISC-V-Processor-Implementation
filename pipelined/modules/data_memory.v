@@ -15,7 +15,10 @@ module data_memory(
     end
 
     always @(posedge clk) begin
-        if (mem_write) begin
+        if (address > 1016 && mem_write) begin
+            $fatal(1, "\n\nError: Invalid memory address %d\n", address);
+        end
+        if (mem_write && address <= 1016) begin
             memory[address]   <= write_data[7:0];
             memory[address+1] <= write_data[15:8];
             memory[address+2] <= write_data[23:16];
@@ -28,7 +31,10 @@ module data_memory(
     end
 
     always @(*) begin
-        if (mem_read) begin
+        if (address > 1016 && mem_read) begin
+            $fatal(1, "\n\nError: Invalid memory address %d\n", address);
+        end
+        if (mem_read && address <= 1016) begin
             read_data = {memory[address+7], memory[address+6], memory[address+5], memory[address+4],
                          memory[address+3], memory[address+2], memory[address+1], memory[address]};
         end else begin

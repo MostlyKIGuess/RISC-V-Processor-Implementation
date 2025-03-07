@@ -28,8 +28,10 @@ module cpu_pipelined(
         .clk(clk),
         .reset(reset),
         .next_pc(pc_next),      // agli instruction ka address
+        // .stall(branch_stall),
         .pc(pc_current)         // current instruction ka address
     );
+
 
     // program instructions ko store karta hai
     instruction_memory imem( // REMEMBER INITIALIZED AS imem, so you can do cpu.imem.memory[0] in testbench
@@ -38,7 +40,7 @@ module cpu_pipelined(
     );
 
     wire nop_instruction;
-    assign nop_instruction = instruction == 0;  // no operation instruction
+    assign nop_instruction = instruction == -1;  // no operation instruction
     
     // IF/ID Pipeline Register
     wire [63:0] if_id_pc;
@@ -46,16 +48,17 @@ module cpu_pipelined(
     wire if_id_end_instruction, if_id_nop_instruction;
     
     // check if_id_instruction to see if it is beq(opcode 1100011), send addi x0 x0 0, also sent pc_next = pc_current
-    wire branch_halt;
-    assign branch_halt = if_id_instruction[6:0] == 7'b1100011;
-    wire [31:0] halt_instruction;
-    assign halt_instruction = branch_halt ? 32'b00000000000000000000000000010011 : instruction;
+    wire branch_stall;
+    assign branch_stall = if_id_instruction[6:0] == 7'b1100011;
+    wire [31:0] stall_instruction;
+    assign stall_instruction = branch_stall ? 32'b00000000000000000000000000010011 : instruction;
+    // 32'b00000000000000000000000000010011
 
     if_id_register if_id(
         .clk(clk),
         .reset(reset),
         .en(1'b1),
-        .d({pc_current, halt_instruction , nop_instruction}),
+        .d({pc_current, stall_instruction, nop_instruction}),
         .q({if_id_pc  , if_id_instruction, if_id_nop_instruction})
     );
 
@@ -106,7 +109,7 @@ module cpu_pipelined(
     wire [63:0] id_ex_pc, id_ex_reg_read_data1, id_ex_reg_read_data2;
     wire [31:0] id_ex_instruction;
     wire id_ex_branch, id_ex_mem_read, id_ex_mem_write, id_ex_mem_to_reg, id_ex_reg_write, id_ex_alu_src, id_ex_nop_instruction;
-    
+
     id_ex_register id_ex(
         .clk(clk),
         .reset(reset),
@@ -154,8 +157,10 @@ module cpu_pipelined(
     );
 
     wire branch_taken;          // jump karna hai ya nahi
+    // assign branch_taken = id_ex_branch & zero;                            // branch lena hai ya nahi
+    // assign pc_next = branch_taken ? branch_target : pc_current + 4;         // next PC set karo
     assign branch_taken = ex_mem_branch & ex_mem_zero;                    // branch lena hai ya nahi
-    assign pc_next = branch_taken ? ex_mem_branch_target : (branch_halt? pc_current : pc_current + 4);                       // next PC set karo
+    assign pc_next = branch_taken ? ex_mem_branch_target : pc_current + 4; // next PC set karo
 
     // memory ke signals
     wire signed [63:0] mem_read_data;  // memory se padhi hui value

@@ -67,8 +67,8 @@ def main():
                 
             # Handle NOP instruction
             if tokens[0] == "nop":
-                # NOP is encoded as all zeros
-                binary_instruction = "00000000000000000000000000000000"
+                # NOP is encoded as all ones
+                binary_instruction = "11111111111111111111111111111111"
                 instructions.append(f"        cpu.imem.memory[{instruction_index}] = 32'b{binary_instruction};")
                 current_address += 4
                 instruction_index += 1
@@ -231,7 +231,7 @@ module testbench_pipelined();
         // promper initialization
         #10 reset = 0;
         
-        forever #5 clk = ~clk; 
+        forever #15 clk = ~clk; 
     end
     
     cpu_pipelined cpu(

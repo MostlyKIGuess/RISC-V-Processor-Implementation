@@ -93,8 +93,10 @@ module cpu_pipelined(
     );
 
     wire pc_src_decode;
+    wire [63:0] pc_branch_decode, shifted_immed;
     assign pc_src_decode = branch_decode & ((forwardAD ? alu_result_memory : read_data1_decode) == (forwardBD ? alu_result_memory : read_data2_decode));
-    assign pc_branch_decode = pc_4decode + (immed_decode << 1);
+    assign shifted_immed = immed_decode;
+    assign pc_branch_decode = pc_4decode + shifted_immed;
 
     decode_execute_register d_e_reg(
         .clk(clk),

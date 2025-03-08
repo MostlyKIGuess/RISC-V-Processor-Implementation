@@ -37,16 +37,16 @@ module cpu_pipelined(
     wire mem_wb_reg_write;
     wire mem_wb_nop_instruction;
 
-    // Branch prediction and handling signals
+    // Branch prediction ke signals
     wire branch_predicted;
     wire [63:0] predicted_pc;
     wire branch_mispredicted;
     wire flush;
 
-    // Add a one-cycle stall flag for load hazards
+    // Ye ek-cycle stall ka flag hai - load hazard ke liye important hai
     reg stalled_last_cycle;
     
-    // Program Counter
+    // Program Counter - instruction address track karta hai 
     wire [63:0] pc_next;        
     wire [63:0] pc_current;    
     program_counter pc (
@@ -56,14 +56,14 @@ module cpu_pipelined(
         .pc(pc_current)
     );
 
-    // Instruction Fetch
+    // Instruction Fetch - memory se instruction lata hai
     wire [31:0] instruction;
     instruction_memory imem(
         .pc(pc_current),
         .instruction(instruction)
     );
 
-    // Modified branch prediction and handling logic
+    // Branch prediction - hum assume karte hain ki branch hamesha liya jayega
     wire is_branch = (instruction[6:0] == 7'b1100011);
     wire [63:0] if_branch_offset = {{51{instruction[31]}}, 
                                 instruction[31],
@@ -73,31 +73,28 @@ module cpu_pipelined(
                                 1'b0};
     wire [63:0] if_branch_target = pc_current + if_branch_offset;
 
-    // Always predict taken for branches
     assign branch_predicted = is_branch;
-    // Key change: Use branch prediction only for branch instructions
     assign predicted_pc = branch_predicted ? if_branch_target : (pc_current + 4);
 
     wire nop_instruction;
     assign nop_instruction = (instruction == 32'b0);
     
-    // IF/ID Pipeline Register
+    // IF/ID Pipeline Register - instruction ko agle stage tak pahunchata hai
     wire [63:0] if_id_pc;
     wire [31:0] if_id_instruction;
     wire if_id_nop_instruction;
     wire if_id_branch_predicted;
     wire [63:0] if_id_predicted_pc;
     
-    wire [31:0] instr_to_use = flush ? 32'h00000013 : instruction;  // NOP when flush
+    wire [31:0] instr_to_use = flush ? 32'h00000013 : instruction;  // Agar flush hai to NOP bhejo
 
-    // Updated to handle one-cycle stall
     if_id_register if_id(
         .clk(clk),
         .reset(reset | flush),
-        .en(~stall | stalled_last_cycle | branch_predicted), // Enable if we stalled last cycle
+        .en(~stall | stalled_last_cycle | branch_predicted), 
         .d({
             pc_current, 
-            stall & ~stalled_last_cycle ? 32'h00000013 : instr_to_use, // Insert NOP during initial stall
+            stall & ~stalled_last_cycle ? 32'h00000013 : instr_to_use, // Load hazard ke time NOP dalne ke liye
             stall & ~stalled_last_cycle ? 1'b1 : nop_instruction, 
             branch_predicted, 
             predicted_pc
@@ -105,7 +102,7 @@ module cpu_pipelined(
         .q({if_id_pc, if_id_instruction, if_id_nop_instruction, if_id_branch_predicted, if_id_predicted_pc})
     );
 
-    // Decode (Control Signals)
+    // Decode stage - instruction ko samajhne ke liye
     wire branch;
     wire mem_read;
     wire mem_to_reg;
@@ -123,7 +120,7 @@ module cpu_pipelined(
         .reg_write(reg_write)
     );
 
-    // Register File
+    // Register File - CPU ke registers
     wire [4:0] rs1 = if_id_instruction[19:15];
     wire [4:0] rs2 = if_id_instruction[24:20];
     wire [4:0] reg_rd;
@@ -151,27 +148,27 @@ module cpu_pipelined(
     wire id_ex_branch_predicted;
     wire [63:0] id_ex_predicted_pc;
 
-    // Load hazard detection
+    // Load hazard ka pata lagane ke liye - jab load ke turant baad uska data use ho
     wire [4:0] id_ex_rd = id_ex_instruction[11:7];
-    // Only detect hazard if we haven't stalled for it already
+    // Sirf tab detect karo jab pehle se stall na kiya ho
     wire load_hazard = id_ex_mem_read & 
                      ((id_ex_rd == rs1) | (id_ex_rd == rs2)) &
                      (id_ex_rd != 0) &
                      ~stalled_last_cycle;
     wire stall = load_hazard;
 
-    // Stalled cycle tracking
+    // Stall tracking - yaad rakhne ke liye ki pichle cycle mein stall kiya tha
     always @(posedge clk or posedge reset) begin
         if (reset)
             stalled_last_cycle <= 1'b0;
         else 
-            stalled_last_cycle <= stall;  // Track if we stalled in the previous cycle
+            stalled_last_cycle <= stall;  // Pichle cycle mein stall kiya tha ki nahi
     end
 
     id_ex_register id_ex(
         .clk(clk),
         .reset(reset | flush),
-        .en(~stall | stalled_last_cycle), // Always enable after one stall cycle
+        .en(~stall | stalled_last_cycle), // Ek stall ke baad hamesha enable karo
         .d({
             if_id_pc, 
             reg_read_data1, 
@@ -204,52 +201,46 @@ module cpu_pipelined(
         })
     );
 
-    // Forwarding Logic (EX stage)
+    // Forwarding Logic - data dependency handle karne ke liye
     wire [4:0] ex_mem_rd = ex_mem_instruction[11:7];
     wire [4:0] mem_wb_rd = mem_wb_instruction[11:7];
     wire [4:0] id_ex_rs1 = id_ex_instruction[19:15];
     wire [4:0] id_ex_rs2 = id_ex_instruction[24:20];
     
-    // Improved forwarding logic
+    // Super-smart forwarding - load instructions ke liye special handling
     reg [1:0] forwardA, forwardB;
     
     always @(*) begin
         forwardA = 2'b00;  // Default: no forwarding
         
-        // Most recent data (EX/MEM) except in case of loads
+        // EX/MEM stage se forward karo, lekin load ke case mein nahi
         if (ex_mem_reg_write && ex_mem_rd != 0 && ex_mem_rd == id_ex_rs1) begin
-            // Special handling: don't forward from EX/MEM if it's a load (data not ready yet)
+            // Agar load hai to forward mat karo - data abhi ready nahi hai
             if (!ex_mem_mem_to_reg)
-                forwardA = 2'b10;  // Forward from EX/MEM
+                forwardA = 2'b10;
         end
         
-        // Data from MEM/WB (includes load results)
+        // MEM/WB se forward karo (load results bhi isme shamil hain)
         if (mem_wb_reg_write && mem_wb_rd != 0 && mem_wb_rd == id_ex_rs1) begin
-            // Always forward from MEM/WB if matching
-            // This overrides EX/MEM forwarding for loads (after stall)
-            forwardA = 2'b01;  // Forward from MEM/WB
+            // Load ke baad EX/MEM forwarding ko override karo
+            forwardA = 2'b01;
         end
     end
 
     always @(*) begin
-        forwardB = 2'b00;  // Default: no forwarding
+        forwardB = 2'b00;
         
-        // Most recent data (EX/MEM) except in case of loads
         if (ex_mem_reg_write && ex_mem_rd != 0 && ex_mem_rd == id_ex_rs2) begin
-            // Special handling: don't forward from EX/MEM if it's a load (data not ready yet)
             if (!ex_mem_mem_to_reg)
-                forwardB = 2'b10;  // Forward from EX/MEM
+                forwardB = 2'b10;
         end
         
-        // Data from MEM/WB (includes load results)
         if (mem_wb_reg_write && mem_wb_rd != 0 && mem_wb_rd == id_ex_rs2) begin
-            // Always forward from MEM/WB if matching
-            // This overrides EX/MEM forwarding for loads (after stall)
-            forwardB = 2'b01;  // Forward from MEM/WB
+            forwardB = 2'b01;
         end
     end
 
-    // ALU Operand Forwarding
+    // ALU ke inputs ready karo with forwarding
     wire signed [63:0] ex_forward_value = ex_mem_alu_result;
     wire signed [63:0] mem_forward_value = mem_wb_mem_to_reg ? mem_wb_mem_read_data : mem_wb_alu_result;
 
@@ -271,14 +262,11 @@ module cpu_pipelined(
         endcase
     end
 
-    // Immediate Generation
+    // Immediate Generation - constants jo instruction mein encode hote hain
     wire [63:0] imm_val;
     
-    // I-type immediate
     wire [63:0] i_imm = {{53{id_ex_instruction[31]}}, id_ex_instruction[30:20]};
-    // S-type immediate
     wire [63:0] s_imm = {{53{id_ex_instruction[31]}}, id_ex_instruction[30:25], id_ex_instruction[11:7]};
-    // B-type immediate
     wire [63:0] b_imm = {{51{id_ex_instruction[31]}}, id_ex_instruction[31], id_ex_instruction[7], 
                          id_ex_instruction[30:25], id_ex_instruction[11:8], 1'b0};
     
@@ -288,7 +276,7 @@ module cpu_pipelined(
 
     wire signed [63:0] alu_in2 = id_ex_alu_src ? imm_val : operandB;
 
-    // ALU
+    // ALU - calculations karne ke liye
     wire signed [63:0] alu_result;
     wire zero;
     alu main_alu(
@@ -299,31 +287,31 @@ module cpu_pipelined(
         .zero(zero)
     );
 
-    // Branch Target Calculation (EX stage)
+    // Branch ka target calculate karo
     wire [63:0] branch_target = id_ex_pc + b_imm;
 
-    // Branch condition checking
-    wire branch_eq = id_ex_branch & (id_ex_instruction[14:12] == 3'b000);  // BEQ
-    wire branch_ne = id_ex_branch & (id_ex_instruction[14:12] == 3'b001);  // BNE
-    wire branch_lt = id_ex_branch & (id_ex_instruction[14:12] == 3'b100);  // BLT
-    wire branch_ge = id_ex_branch & (id_ex_instruction[14:12] == 3'b101);  // BGE
+    // Branch condition checking - konsa branch lena hai
+    wire branch_eq = id_ex_branch & (id_ex_instruction[14:12] == 3'b000);
+    wire branch_ne = id_ex_branch & (id_ex_instruction[14:12] == 3'b001);
+    wire branch_lt = id_ex_branch & (id_ex_instruction[14:12] == 3'b100);
+    wire branch_ge = id_ex_branch & (id_ex_instruction[14:12] == 3'b101);
 
-    // branch logic
+    // Branch lena hai ya nahi decide karo
     wire branch_taken = (branch_eq & zero) |
                         (branch_ne & ~zero) |
                         (branch_lt & (operandA < operandB)) |
                         (branch_ge & (operandA >= operandB));
 
-    // Branch misprediction detection
+    // Agar prediction galat thi to misprediction signal do
     assign branch_mispredicted = id_ex_branch && (branch_taken != id_ex_branch_predicted);
     
-    // Correct address when mispredicted
+    // Prediction galat thi to correct PC ka calculation
     wire [63:0] correct_pc = branch_taken ? branch_target : (id_ex_pc + 4);
     
-    // Flush pipeline on misprediction
+    // Pipeline flush karo jab prediction galat ho
     assign flush = branch_mispredicted & ~id_ex_branch_predicted;
 
-    // PC update with stall for exactly one cycle then force progress
+    // PC ka update: stall, branch misprediction, ya normal increment
     wire [63:0] pc_to_use = stall & ~stalled_last_cycle ? pc_current : 
                         (branch_mispredicted ? correct_pc : predicted_pc);
     assign pc_next = pc_to_use;
@@ -363,7 +351,7 @@ module cpu_pipelined(
         })
     );
 
-    // Data Memory
+    // Data Memory - RAM jisme data store hota hai
     wire signed [63:0] mem_read_data;
     data_memory dmem(
         .clk(clk),
@@ -397,12 +385,12 @@ module cpu_pipelined(
         })
     );
 
-    // Write-Back Stage
+    // Write-Back Stage - register mein value wapas likhne ke liye
     assign reg_write_data = mem_wb_mem_to_reg ? mem_wb_mem_read_data : mem_wb_alu_result;
     wire [4:0] mem_wb_rd_fixed = mem_wb_instruction[11:7];
     assign reg_rd = mem_wb_rd_fixed;
 
-    // End of Program
+    // Program khatam hone ka signal - jab NOP execute ho aur koi branch na ho
     assign end_program = mem_wb_nop_instruction & ~ branch_mispredicted & ~ branch_predicted;
 
 endmodule

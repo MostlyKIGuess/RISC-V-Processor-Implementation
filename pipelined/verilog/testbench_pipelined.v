@@ -16,11 +16,15 @@ module testbench_pipelined();
         reset = 1;
         
         // Initialize instruction memory first
-        cpu.imem.memory[0] = 32'b00000000000000000000100001100011;
-        cpu.imem.memory[1] = 32'b00000000010000000000001010010011;
-        cpu.imem.memory[2] = 32'b00000000010000000000001100010011;
-        cpu.imem.memory[3] = 32'b00000000010000000000001110010011;
-        cpu.imem.memory[4] = 32'b00000000000000000000000000000000;
+        cpu.imem.memory[0] = 32'b00000000101000000000000010010011;
+        cpu.imem.memory[1] = 32'b00000000010100001000000100010011;
+        cpu.imem.memory[2] = 32'b00000001010000001000000110010011;
+        cpu.imem.memory[3] = 32'b00000000001100010000001000110011;
+        cpu.imem.memory[4] = 32'b00000000010100100000001010010011;
+        cpu.imem.memory[5] = 32'b00000110010000000000001100010011;
+        cpu.imem.memory[6] = 32'b01000000011000101000001110110011;
+        cpu.imem.memory[7] = 32'b00000000000000000000000000000000;
+        cpu.imem.memory[8] = 32'b00000000000000000000000000000000;
         
         // promper initialization
         #10 reset = 0;
@@ -121,7 +125,7 @@ module testbench_pipelined();
 
             // Show ID stage activity
             $display("ID Stage: rs1=x%0d (%0d), rs2=x%0d (%0d), rd=x%0d", 
-                cpu.rs1, cpu.reg_read_data1, cpu.rs2, cpu.reg_read_data2, cpu.rd);
+                cpu.rs1, cpu.reg_read_data1, cpu.rs2, cpu.reg_read_data2, cpu.reg_rd);
             
             // Show EX stage activity (removed alu_control as it doesn't exist)
             $display("EX Stage: ALU Result=%0h", cpu.alu_result);
@@ -135,9 +139,9 @@ module testbench_pipelined();
                     cpu.alu_result, cpu.mem_read_data);
                 
             // Show WB stage activity
-            if (cpu.reg_write && cpu.rd != 0)
+            if (cpu.reg_write && cpu.reg_rd != 0)
                 $display("WB Stage: Writing %0d to register x%0d", 
-                    cpu.reg_write_data, cpu.rd);
+                    cpu.reg_write_data, cpu.reg_rd);
             
             // Control signals
             $display("Control signals: branch=%b, mem_read=%b, mem_to_reg=%b, mem_write=%b, alu_src=%b, reg_write=%b", 

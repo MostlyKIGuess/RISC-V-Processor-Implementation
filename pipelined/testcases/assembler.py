@@ -327,7 +327,7 @@ module testbench_pipelined();
 
             // Show ID stage activity
             $display("ID Stage: rs1=x%0d (%0d), rs2=x%0d (%0d), rd=x%0d", 
-                cpu.rs1, cpu.reg_read_data1, cpu.rs2, cpu.reg_read_data2, cpu.rd);
+                cpu.rs1, cpu.reg_read_data1, cpu.rs2, cpu.reg_read_data2, cpu.reg_rd);
             
             // Show EX stage activity (removed alu_control as it doesn't exist)
             $display("EX Stage: ALU Result=%0h", cpu.alu_result);
@@ -341,9 +341,9 @@ module testbench_pipelined();
                     cpu.alu_result, cpu.mem_read_data);
                 
             // Show WB stage activity
-            if (cpu.reg_write && cpu.rd != 0)
+            if (cpu.reg_write && cpu.reg_rd != 0)
                 $display("WB Stage: Writing %0d to register x%0d", 
-                    cpu.reg_write_data, cpu.rd);
+                    cpu.reg_write_data, cpu.reg_rd);
             
             // Control signals
             $display("Control signals: branch=%b, mem_read=%b, mem_to_reg=%b, mem_write=%b, alu_src=%b, reg_write=%b", 

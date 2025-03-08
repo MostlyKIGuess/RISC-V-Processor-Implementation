@@ -16,15 +16,10 @@ module testbench_pipelined();
         reset = 1;
         
         // Initialize instruction memory first
-        cpu.imem.memory[0] = 32'b00000000101000000000000010010011;
-        cpu.imem.memory[1] = 32'b00000000010100001000000100010011;
-        cpu.imem.memory[2] = 32'b00000001010000001000000110010011;
-        cpu.imem.memory[3] = 32'b00000000001100010000001000110011;
-        cpu.imem.memory[4] = 32'b00000000010100100000001010010011;
-        cpu.imem.memory[5] = 32'b00000110010000000000001100010011;
-        cpu.imem.memory[6] = 32'b01000000011000101000001110110011;
-        cpu.imem.memory[7] = 32'b00000000000000000000000000000000;
-        cpu.imem.memory[8] = 32'b00000000000000000000000000000000;
+        cpu.imem.memory[0] = 32'b00000000000000000000010001100011;
+        cpu.imem.memory[1] = 32'b00000000001100000000001100010011;
+        cpu.imem.memory[2] = 32'b00000000010000000000001010010011;
+        cpu.imem.memory[3] = 32'b00000000000000000000000000000000;
         
         // promper initialization
         #10 reset = 0;

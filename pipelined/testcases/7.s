@@ -3,6 +3,7 @@ begin:
     addi x7, x0, 4
     addi x8, x0, 5
     addi x9, x0, 6
+    addi x10, x0 , 10
 
 L1:
     addi x5, x0, 4

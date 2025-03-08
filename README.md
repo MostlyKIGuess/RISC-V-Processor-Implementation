@@ -19,10 +19,36 @@ PS: I recommend testing 2.s ( a really long programme that checks all the ALU fu
 ./test_sequential.sh 6.s
 ```
 
+## Pipelined Implementation
+
+The pipelined implementation features a 5-stage pipeline with hazard detection, data forwarding, and branch prediction. To run tests on the pipelined CPU:
+
+
+```sh
+cd pipelined
+chmod +x test_pipelined.sh
+./test_pipelined.sh <filename>.s
+```
+
+### Key Pipelined Features:
+
+- 5-stage pipeline: IF, ID, EX, MEM, and WB stages
+- Static branch prediction: Always-taken strategy for branches
+- Data hazard handling: Forwarding paths for most hazards, stalling for load-use hazards
+- Control hazard handling: Pipeline flush on branch misprediction
+- Performance: Multiple test cases demonstrate improved throughput over sequential design
+
+
+### Test Cases:
+- 2.s: Tests loop with data dependencies, showcasing forwarding paths
+- 4.s: Tests branch prediction with unconditional branches
+- 7.s: Tests branch prediction and control hazard handling
+- 8.s: Tests load-use hazard detection and stalling mechanism
+
 ## Assembly Instructions Supported
 
 The assembler supports a subset of RISC-V instructions:
-- **R-type**: `add`, `sub`, `or`, `and`
+- **R-type**: `add`, `sub`, `or`, `and`, `addi`
 - **I-type**: `addi`, `ld` (load doubleword)
 - **S-type**: `sd` (store doubleword)
 - **B-type**: `beq` (branch if equal)

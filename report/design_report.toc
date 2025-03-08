@@ -1,0 +1,32 @@
+\contentsline {section}{\numberline {1}Sequential CPU Design}{2}{section.1}%
+\contentsline {subsection}{\numberline {1.1}Overview}{2}{subsection.1.1}%
+\contentsline {subsection}{\numberline {1.2}Working of the CPU}{2}{subsection.1.2}%
+\contentsline {subsection}{\numberline {1.3}Assembler}{3}{subsection.1.3}%
+\contentsline {subsubsection}{\numberline {1.3.1}Introduction}{3}{subsubsection.1.3.1}%
+\contentsline {subsubsection}{\numberline {1.3.2}Assembler Overview}{4}{subsubsection.1.3.2}%
+\contentsline {subsubsection}{\numberline {1.3.3}Testbench Generation}{4}{subsubsection.1.3.3}%
+\contentsline {subsection}{\numberline {1.4}Simulation}{5}{subsection.1.4}%
+\contentsline {subsection}{\numberline {1.5}Visualisation}{7}{subsection.1.5}%
+\contentsline {section}{\numberline {2}Pipelined CPU Design Documentation}{8}{section.2}%
+\contentsline {subsection}{\numberline {2.1}Overview}{8}{subsection.2.1}%
+\contentsline {subsection}{\numberline {2.2}Pipeline Register Implementation}{9}{subsection.2.2}%
+\contentsline {subsection}{\numberline {2.3}Architectural Rationale and Implementation Details}{9}{subsection.2.3}%
+\contentsline {subsubsection}{\numberline {2.3.1}Pipeline Register Design Strategy}{9}{subsubsection.2.3.1}%
+\contentsline {subsubsection}{\numberline {2.3.2}Control Signal Propagation}{10}{subsubsection.2.3.2}%
+\contentsline {subsubsection}{\numberline {2.3.3}Data Hazard Resolution System}{10}{subsubsection.2.3.3}%
+\contentsline {subsubsection}{\numberline {2.3.4}Branch Prediction Implementation}{10}{subsubsection.2.3.4}%
+\contentsline {subsubsection}{\numberline {2.3.5}Forwarding Implementation}{12}{subsubsection.2.3.5}%
+\contentsline {subsection}{\numberline {2.4}Critical Design Tradeoffs}{12}{subsection.2.4}%
+\contentsline {subsection}{\numberline {2.5}Key Implementation Nuances}{12}{subsection.2.5}%
+\contentsline {subsubsection}{\numberline {2.5.1}Instruction Injection Protocol}{12}{subsubsection.2.5.1}%
+\contentsline {subsubsection}{\numberline {2.5.2}Stall State Tracking}{13}{subsubsection.2.5.2}%
+\contentsline {subsubsection}{\numberline {2.5.3}End-of-Program Detection}{13}{subsubsection.2.5.3}%
+\contentsline {subsection}{\numberline {2.6}Architectural Validation Points}{13}{subsection.2.6}%
+\contentsline {subsection}{\numberline {2.7}Simulation}{13}{subsection.2.7}%
+\contentsline {subsubsection}{\numberline {2.7.1}Case I: Loop with Data Dependencies}{13}{subsubsection.2.7.1}%
+\contentsline {subsubsection}{\numberline {2.7.2}Case II: Branch Prediction Testing}{14}{subsubsection.2.7.2}%
+\contentsline {subsubsection}{\numberline {2.7.3}Case III: Branch Misprediction Recovery}{15}{subsubsection.2.7.3}%
+\contentsline {subsubsection}{\numberline {2.7.4}Case IV: Load-Use Hazard Resolution}{16}{subsubsection.2.7.4}%
+\contentsline {subsubsection}{\numberline {2.7.5}Case V: Data Forwarding Validation}{17}{subsubsection.2.7.5}%
+\contentsline {subsubsection}{\numberline {2.7.6}Case VI: Control Hazard Complex Case}{18}{subsubsection.2.7.6}%
+\contentsline {section}{\numberline {3}Contribution and Conclusion}{19}{section.3}%

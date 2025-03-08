@@ -363,6 +363,6 @@ module cpu_pipelined(
     assign reg_rd = mem_wb_rd_fixed;
 
     // End of Program
-    assign end_program = mem_wb_nop_instruction;
+    assign end_program = mem_wb_nop_instruction & ~ branch_predicted;
 
 endmodule

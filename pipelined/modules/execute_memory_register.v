@@ -7,11 +7,12 @@ module execute_memory_register (
     output reg [164:0] q
 );
 
-    always @(posedge clk or posedge reset) begin
-        if (reset)
-            q <= {165{1'b0}};
-        else
-            q <= d;
+    initial begin
+        q = 165'b0;
+    end
+
+    always @(posedge clk) begin
+        q <= d;
     end
     
 endmodule

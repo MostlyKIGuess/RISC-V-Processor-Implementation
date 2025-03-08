@@ -9,13 +9,15 @@ module fetch_decode_register (
     output reg [96:0] q
 );
     
-    always @(posedge clk or posedge reset) begin
-        if (reset)
-            q <= {97{1'b0}};
-        else if (flush)
+    initial begin
+        q = 97'b0;
+    end
+
+    always @(posedge clk) begin
+    if (flush)
             q[96:1] <= 96'b0;
-        else if (enable)
-            q <= d;
+    else if (enable)
+        q <= d;
     end
     
 endmodule

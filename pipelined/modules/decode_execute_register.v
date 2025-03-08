@@ -8,10 +8,12 @@ module decode_execute_register (
     output reg [293:0] q
 );
     
-    always @(posedge clk or posedge reset) begin
-        if (reset)
-            q <= 294'b0;  // Synchronous reset (on reset)
-        else if (flush)
+    initial begin
+        q = 294'b0;
+    end
+
+    always @(posedge clk or posedge flush) begin
+        if (flush)
             q[293:1] <= 293'b0;  // Asynchronous flush (only clears bits 293:1)
         else
             q <= d;  // Normal update

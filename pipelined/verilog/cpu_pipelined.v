@@ -46,15 +46,15 @@ module cpu_pipelined(
     assign eop = instr_fetch == -1;
 
     wire [31:0] instr_decode;
-    wire [63:0] pc_4decode;
+    wire [63:0] pc_decode;
 
     fetch_decode_register f_d_reg(
         .clk(clk),
         .reset(reset),
         .flush(pc_src_decode),
         .enable(~stallD),
-        .d({pc_4fetch , instr_fetch , eop}),
-        .q({pc_4decode, instr_decode, eop_decode})
+        .d({pc_fetch , instr_fetch , eop}),
+        .q({pc_decode, instr_decode, eop_decode})
     );
     
     wire [4:0] rs1_decode, rs2_decode;
@@ -95,20 +95,20 @@ module cpu_pipelined(
     wire pc_src_decode;
     wire [63:0] pc_branch_decode, shifted_immed;
     assign pc_src_decode = branch_decode & ((forwardAD ? alu_result_memory : read_data1_decode) == (forwardBD ? alu_result_memory : read_data2_decode));
-    assign shifted_immed = immed_decode;
-    assign pc_branch_decode = pc_4decode + shifted_immed;
+    assign shifted_immed = immed_decode << 1;
+    assign pc_branch_decode = pc_decode + shifted_immed;
 
     decode_execute_register d_e_reg(
         .clk(clk),
         .reset(reset),
         .flush(flushE),
-        .d({read_data1_decode,  read_data2_decode , immed_decode , instr_decode , pc_4decode , branch_decode , mem_to_reg_decode , mem_write_decode , alu_src_decode , reg_write_decode , eop_decode}),
-        .q({read_data1_execute, read_data2_execute, immed_execute, instr_execute, pc_4execute, branch_execute, mem_to_reg_execute, mem_write_execute, alu_src_execute, reg_write_execute, eop_execute})
+        .d({read_data1_decode,  read_data2_decode , immed_decode , instr_decode , pc_decode , branch_decode , mem_to_reg_decode , mem_write_decode , alu_src_decode , reg_write_decode , eop_decode}),
+        .q({read_data1_execute, read_data2_execute, immed_execute, instr_execute, pc_execute, branch_execute, mem_to_reg_execute, mem_write_execute, alu_src_execute, reg_write_execute, eop_execute})
     );
 
     wire alu_src_execute;
     wire [31:0] instr_execute;
-    wire [63:0] read_data1_execute, read_data2_execute, immed_execute, alu_result_execute, pc_4execute;
+    wire [63:0] read_data1_execute, read_data2_execute, immed_execute, alu_result_execute, pc_execute;
 
     wire [63:0] forwarding_AE, forwarding_BE;
 
@@ -140,18 +140,18 @@ module cpu_pipelined(
     execute_memory_register e_m_reg(
         .clk(clk),
         .reset(reset),
-        .d({alu_result_execute, read_data2_execute, instr_execute, branch_execute, mem_to_reg_execute, mem_write_execute, reg_write_execute, eop_execute}),
-        .q({alu_result_memory , read_data2_memory , instr_memory , branch_memory , mem_to_reg_memory , mem_write_memory , reg_write_memory , eop_memory})
+        .d({alu_result_execute, forwarding_BE    , instr_execute, branch_execute, mem_to_reg_execute, mem_write_execute, reg_write_execute, eop_execute}),
+        .q({alu_result_memory , write_data_memory, instr_memory , branch_memory , mem_to_reg_memory , mem_write_memory , reg_write_memory , eop_memory})
     );
 
     wire mem_read_memory, mem_write_memory, mem_to_reg_memory, reg_write_memory;
     wire [31:0] instr_memory;
-    wire [63:0] alu_result_memory, read_data2_memory, result_memory, data_result_memory;
+    wire [63:0] alu_result_memory, write_data_memory, result_memory, data_result_memory;
 
     data_memory dmem(
         .clk(clk),
         .address(alu_result_memory),
-        .write_data(read_data2_memory),
+        .write_data(write_data_memory),
         .read_data(data_result_memory),
         .mem_read(reg_write_memory),
         .mem_write(mem_write_memory)

@@ -5,10 +5,13 @@ module program_counter(
     input [63:0] next_pc,
     output reg [63:0] pc
 );
-    always @(posedge clk or posedge reset) begin
-        if (reset)
-            pc <= 64'b0;
-        else if (enable)
+
+    initial begin
+        pc = 64'b0;
+    end
+
+    always @(posedge clk) begin
+        if (enable)
             pc <= next_pc;
     end
 endmodule

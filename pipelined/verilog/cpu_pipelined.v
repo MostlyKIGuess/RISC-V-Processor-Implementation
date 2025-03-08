@@ -43,6 +43,9 @@ module cpu_pipelined(
     wire branch_mispredicted;
     wire flush;
 
+    // Add a one-cycle stall flag for load hazards
+    reg stalled_last_cycle;
+    
     // Program Counter
     wire [63:0] pc_next;        
     wire [63:0] pc_current;    
@@ -75,7 +78,6 @@ module cpu_pipelined(
     // Key change: Use branch prediction only for branch instructions
     assign predicted_pc = branch_predicted ? if_branch_target : (pc_current + 4);
 
-    
     wire nop_instruction;
     assign nop_instruction = (instruction == 32'b0);
     
@@ -88,12 +90,18 @@ module cpu_pipelined(
     
     wire [31:0] instr_to_use = flush ? 32'h00000013 : instruction;  // NOP when flush
 
+    // Updated to handle one-cycle stall
     if_id_register if_id(
         .clk(clk),
         .reset(reset | flush),
-        // No stall on branch taken to ensure target instruction proceeds
-        .en(~stall | branch_predicted),
-        .d({pc_current, instr_to_use, nop_instruction, branch_predicted, predicted_pc}),
+        .en(~stall | stalled_last_cycle | branch_predicted), // Enable if we stalled last cycle
+        .d({
+            pc_current, 
+            stall & ~stalled_last_cycle ? 32'h00000013 : instr_to_use, // Insert NOP during initial stall
+            stall & ~stalled_last_cycle ? 1'b1 : nop_instruction, 
+            branch_predicted, 
+            predicted_pc
+        }),
         .q({if_id_pc, if_id_instruction, if_id_nop_instruction, if_id_branch_predicted, if_id_predicted_pc})
     );
 
@@ -143,16 +151,27 @@ module cpu_pipelined(
     wire id_ex_branch_predicted;
     wire [63:0] id_ex_predicted_pc;
 
+    // Load hazard detection
     wire [4:0] id_ex_rd = id_ex_instruction[11:7];
+    // Only detect hazard if we haven't stalled for it already
     wire load_hazard = id_ex_mem_read & 
                      ((id_ex_rd == rs1) | (id_ex_rd == rs2)) &
-                     (id_ex_rd != 0);
+                     (id_ex_rd != 0) &
+                     ~stalled_last_cycle;
     wire stall = load_hazard;
+
+    // Stalled cycle tracking
+    always @(posedge clk or posedge reset) begin
+        if (reset)
+            stalled_last_cycle <= 1'b0;
+        else 
+            stalled_last_cycle <= stall;  // Track if we stalled in the previous cycle
+    end
 
     id_ex_register id_ex(
         .clk(clk),
         .reset(reset | flush),
-        .en(~stall),
+        .en(~stall | stalled_last_cycle), // Always enable after one stall cycle
         .d({
             if_id_pc, 
             reg_read_data1, 
@@ -186,26 +205,48 @@ module cpu_pipelined(
     );
 
     // Forwarding Logic (EX stage)
-    reg [1:0] forwardA, forwardB;
     wire [4:0] ex_mem_rd = ex_mem_instruction[11:7];
     wire [4:0] mem_wb_rd = mem_wb_instruction[11:7];
     wire [4:0] id_ex_rs1 = id_ex_instruction[19:15];
     wire [4:0] id_ex_rs2 = id_ex_instruction[24:20];
-
+    
+    // Improved forwarding logic
+    reg [1:0] forwardA, forwardB;
+    
     always @(*) begin
-        forwardA = 2'b00;
-        if (ex_mem_reg_write && ex_mem_rd != 0 && ex_mem_rd == id_ex_rs1)
-            forwardA = 2'b10;
-        else if (mem_wb_reg_write && mem_wb_rd != 0 && mem_wb_rd == id_ex_rs1)
-            forwardA = 2'b01;
+        forwardA = 2'b00;  // Default: no forwarding
+        
+        // Most recent data (EX/MEM) except in case of loads
+        if (ex_mem_reg_write && ex_mem_rd != 0 && ex_mem_rd == id_ex_rs1) begin
+            // Special handling: don't forward from EX/MEM if it's a load (data not ready yet)
+            if (!ex_mem_mem_to_reg)
+                forwardA = 2'b10;  // Forward from EX/MEM
+        end
+        
+        // Data from MEM/WB (includes load results)
+        if (mem_wb_reg_write && mem_wb_rd != 0 && mem_wb_rd == id_ex_rs1) begin
+            // Always forward from MEM/WB if matching
+            // This overrides EX/MEM forwarding for loads (after stall)
+            forwardA = 2'b01;  // Forward from MEM/WB
+        end
     end
 
     always @(*) begin
-        forwardB = 2'b00;
-        if (ex_mem_reg_write && ex_mem_rd != 0 && ex_mem_rd == id_ex_rs2)
-            forwardB = 2'b10;
-        else if (mem_wb_reg_write && mem_wb_rd != 0 && mem_wb_rd == id_ex_rs2)
-            forwardB = 2'b01;
+        forwardB = 2'b00;  // Default: no forwarding
+        
+        // Most recent data (EX/MEM) except in case of loads
+        if (ex_mem_reg_write && ex_mem_rd != 0 && ex_mem_rd == id_ex_rs2) begin
+            // Special handling: don't forward from EX/MEM if it's a load (data not ready yet)
+            if (!ex_mem_mem_to_reg)
+                forwardB = 2'b10;  // Forward from EX/MEM
+        end
+        
+        // Data from MEM/WB (includes load results)
+        if (mem_wb_reg_write && mem_wb_rd != 0 && mem_wb_rd == id_ex_rs2) begin
+            // Always forward from MEM/WB if matching
+            // This overrides EX/MEM forwarding for loads (after stall)
+            forwardB = 2'b01;  // Forward from MEM/WB
+        end
     end
 
     // ALU Operand Forwarding
@@ -282,11 +323,10 @@ module cpu_pipelined(
     // Flush pipeline on misprediction
     assign flush = branch_mispredicted & ~id_ex_branch_predicted;
 
-    // 2. Fix PC selection logic - ensure branch target instructions proceed correctly
-    wire [63:0] pc_to_use = stall ? pc_current : 
+    // PC update with stall for exactly one cycle then force progress
+    wire [63:0] pc_to_use = stall & ~stalled_last_cycle ? pc_current : 
                         (branch_mispredicted ? correct_pc : predicted_pc);
     assign pc_next = pc_to_use;
-
 
     // EX/MEM Pipeline Register
     ex_mem_register ex_mem(

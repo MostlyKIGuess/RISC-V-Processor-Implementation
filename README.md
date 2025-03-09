@@ -30,6 +30,15 @@ chmod +x test_pipelined.sh
 ./test_pipelined.sh <filename>.s
 ```
 
+#### Pipeline-Visualization:
+- This isn't directly done like Sequentials test_sequential but rather a different script is used , so to visualize on pipeline you would have to do:
+
+```bash
+cd pipeline
+chmod +x pipeline_visualization.sh
+./pipeline_visualization.sh <filename>.s
+```
+
 ### Key Pipelined Features:
 
 - 5-stage pipeline: IF, ID, EX, MEM, and WB stages

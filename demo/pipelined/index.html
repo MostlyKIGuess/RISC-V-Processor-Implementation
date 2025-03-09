@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Pipelined CPU Simulator</title>
+    <link rel="stylesheet" href="styles.css" />
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+  </head>
+  <body>
+    <div class="container">
+      <div class="header">
+        <h1>RISC-V CPU Visualizer</h1>
+        <div class="controls">
+          <button id="prev" disabled>Previous Cycle</button>
+          <span id="cycle-display">Cycle: 0</span>
+          <button id="next">Next Cycle</button>
+          <button id="play-pause">Play</button>
+          <select id="speed">
+            <option value="1000">1x Speed</option>
+            <option value="200">5x Speed</option>
+            <option value="100">10x Speed</option>
+            <option value="20">50x Speed</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="main-view">
+        <div class="left-sidebar">
+          <div class="panel">
+            <h3>Pipeline Status</h3>
+            <div id="pipeline-status"></div>
+          </div>
+        </div>
+
+        <div id="cpu-diagram"></div>
+
+        <div class="right-sidebar">
+          <div class="panel">
+            <h3>Hazard Detection</h3>
+            <div id="hazard-info"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="bottom-panels">
+        <div class="panel">
+          <h3>Registers</h3>
+          <div id="register-view"></div>
+        </div>
+        <div class="panel">
+          <h3>Memory</h3>
+          <div id="memory-view"></div>
+        </div>
+      </div>
+    </div>
+
+    <script src="pipeline-data.js"></script>
+    <script src="pipeline-visualizer.js"></script>
+  </body>
+</html>

@@ -10,19 +10,19 @@
   <body>
     <div class="container">
       <div class="header">
-        <h1>Pipelined CPU Simulator</h1>
-      </div>
-
-      <div class="controls">
-        <button id="prev">Previous</button>
-        <button id="play-pause">Play</button>
-        <button id="next">Next</button>
-        <select id="speed">
-          <option value="1000">1x</option>
-          <option value="500">2x</option>
-          <option value="200">5x</option>
-        </select>
-        <span id="cycle-display">Cycle: 1</span>
+        <h1>RISC-V CPU Visualizer</h1>
+        <div class="controls">
+          <button id="prev" disabled>Previous Cycle</button>
+          <span id="cycle-display">Cycle: 0</span>
+          <button id="next">Next Cycle</button>
+          <button id="play-pause">Play</button>
+          <select id="speed">
+            <option value="1000">1x Speed</option>
+            <option value="200">5x Speed</option>
+            <option value="100">10x Speed</option>
+            <option value="20">50x Speed</option>
+          </select>
+        </div>
       </div>
 
       <div class="main-view">

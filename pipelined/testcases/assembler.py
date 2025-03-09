@@ -329,7 +329,7 @@ module testbench_pipelined();
             $display("ID Stage: rs1=x%0d (%0d), rs2=x%0d (%0d), rd=x%0d", 
                 cpu.rs1, cpu.reg_read_data1, cpu.rs2, cpu.reg_read_data2, cpu.reg_rd);
             
-            // Show EX stage activity (removed alu_control as it doesn't exist)
+            // Show EX stage activity
             $display("EX Stage: ALU Result=%0h", cpu.alu_result);
             
             // Show MEM stage activity
@@ -349,6 +349,49 @@ module testbench_pipelined();
             $display("Control signals: branch=%b, mem_read=%b, mem_to_reg=%b, mem_write=%b, alu_src=%b, reg_write=%b", 
                 cpu.branch, cpu.mem_read, cpu.mem_to_reg, cpu.mem_write, cpu.alu_src, cpu.reg_write);
             
+            // Add pipeline register contents - MORE DETAILED INFO
+            $display("Pipeline Registers:");
+            $display("IF/ID: PC=%h, Instruction=%h", cpu.if_id_pc, cpu.if_id_instruction);
+            $display("ID/EX: PC=%h, Instruction=%h, rs1=x%0d, rs2=x%0d, rd=x%0d, RegWrite=%b, MemWrite=%b", 
+                     cpu.id_ex_pc, cpu.id_ex_instruction, cpu.id_ex_rs1, cpu.id_ex_rs2, 
+                     cpu.id_ex_rd, cpu.id_ex_reg_write, cpu.id_ex_mem_write);
+            $display("EX/MEM: Instruction=%h, rd=x%0d, RegWrite=%b, MemWrite=%b, ALUResult=%h", 
+                     cpu.ex_mem_instruction, cpu.ex_mem_rd, cpu.ex_mem_reg_write, 
+                     cpu.ex_mem_mem_write, cpu.ex_mem_alu_result);
+            $display("MEM/WB: Instruction=%h, rd=x%0d, RegWrite=%b, MemToReg=%b", 
+                     cpu.mem_wb_instruction, cpu.mem_wb_rd, cpu.mem_wb_reg_write, 
+                     cpu.mem_wb_mem_to_reg);
+            
+                // Hazard detection information
+                if (cpu.stall) begin  // Use cpu.stall directly instead of cpu.hazard_detection_unit.stall_pipeline
+                    $display("HAZARD DETECTED: Stalling pipeline");
+                    $display("Load-use hazard between instructions at PC=%h and PC=%h", 
+                            cpu.if_id_pc - 4, cpu.if_id_pc);
+                end
+
+                // Forwarding information
+                if (cpu.forwardA != 0 || cpu.forwardB != 0) begin  // Use cpu.forwardA/B directly
+                    $display("Forwarding active:");
+                    if (cpu.forwardA == 2'b10)
+                        $display("EX → EX Forwarding to rs1 (x%0d)", cpu.id_ex_rs1);
+                    if (cpu.forwardA == 2'b01)
+                        $display("MEM → EX Forwarding to rs1 (x%0d)", cpu.id_ex_rs1);
+                    if (cpu.forwardB == 2'b10)
+                        $display("EX → EX Forwarding to rs2 (x%0d)", cpu.id_ex_rs2);
+                    if (cpu.forwardB == 2'b01)
+                        $display("MEM → EX Forwarding to rs2 (x%0d)", cpu.id_ex_rs2);
+                end
+
+                // Branch information
+                if (cpu.branch && cpu.zero) begin  // Use cpu.zero instead of cpu.alu_zero
+                    $display("Branch at PC=%h: Taking branch", cpu.pc_current);
+                    if (cpu.branch_mispredicted)  // Use cpu.branch_mispredicted directly
+                        $display("Branch mispredicted: Pipeline flush required");
+                end
+
+                // Pipeline stall/flush status
+                if (cpu.flush)  // Use cpu.flush instead of cpu.if_id_flush
+                    $display("Pipeline flushed");
         end
     end
     
@@ -364,6 +407,7 @@ endmodule'''
         f.write(testbench)
     
     print(f"Generated testbench file: {output_file}")
+
 
 def get_instruction_type(instruction):
     if instruction in ["add", "sub", "or", "and"]:

@@ -9,6 +9,7 @@ def parse_pipeline_output(file_path):
     cycles = []
     cycle_blocks = content.split("--------------------------------")
     
+    # Parse the cycle-by-cycle data
     for block in cycle_blocks:
         if "Time=" not in block:
             continue
@@ -187,10 +188,41 @@ def parse_pipeline_output(file_path):
             cycle_data["flush_occurred"] = True
             cycle_data["pipeline_recovery"] = True
         
-        
-        
+ 
         cycles.append(cycle_data)
     
+    # Parse final register and memory state
+    final_registers = {}
+    final_memory = {}
+    
+    # Extract final register values
+    reg_section = re.search(r"Register file contents:(.*?)Memory contents:", content, re.DOTALL)
+    if reg_section:
+        reg_content = reg_section.group(1)
+        reg_matches = re.findall(r"x(\d+) = (-?\d+)", reg_content)
+        for match in reg_matches:
+            reg_num = int(match[0])
+            reg_value = int(match[1])
+            final_registers[f"x{reg_num}"] = reg_value
+    
+    # Extract final memory values
+    mem_section = re.search(r"Memory contents:(.*?)Data memory contents written", content, re.DOTALL)
+    if mem_section:
+        mem_content = mem_section.group(1)
+        mem_matches = re.findall(r"mem\[(\d+)\] = (-?\d+)", mem_content)
+        for match in mem_matches:
+            mem_addr = int(match[0])
+            mem_value = int(match[1])
+            final_memory[f"mem_{mem_addr}"] = mem_value
+    
+    # Add the final register and memory values to the last cycle
+    if cycles and final_registers:
+        for reg_name, reg_value in final_registers.items():
+            cycles[-1][reg_name] = reg_value
+            
+    if cycles and final_memory:
+        for mem_name, mem_value in final_memory.items():
+            cycles[-1][mem_name] = mem_value
     
     return {"cycles": cycles}
 

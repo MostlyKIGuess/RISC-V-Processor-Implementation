@@ -1,57 +1,380 @@
+<!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>RISC-V CPU Visualizer</title>
-    <link rel="stylesheet" href="css/styles.css">
-    <script src="https://d3js.org/d3.v7.min.js"></script>
-</head>
-<body>
+    <link rel="stylesheet" href="css/styles.css" />
+  </head>
+  <body>
     <div class="container">
-        <div class="header">
-            <h1>RISC-V CPU Visualizer</h1>
-            <div class="controls">
-                <button id="prev" disabled>Previous Cycle</button>
-                <span id="cycle-display">Cycle: 0</span>
-                <button id="next">Next Cycle</button>
-                <button id="play-pause">Play</button>
-                <select id="speed">
-                    <option value="1000">1x Speed</option>
-                    <option value="200">5x Speed</option>
-                    <option value="100">10x Speed</option>
-                    <option value="20">50x Speed</option>
-                </select>
-            </div>
-        </div>
+      <div class="header-container">
+        <h1>RISC-V CPU Visualization</h1>
         
-        <div class="main-view">
-            <div class="left-sidebar">
-                <div class="panel">
-                    <h3>Instruction</h3>
-                    <div id="instruction-info"></div>
-                </div>
-                <div class="panel">
-                    <h3>Control Signals</h3>
-                    <div id="control-signals"></div>
-                </div>
-            </div>
-            
-            <div id="cpu-diagram"></div>
-            
-            <div class="right-sidebar">
-                <div class="panel">
-                    <h3>Registers</h3>
-                    <div id="register-view"></div>
-                </div>
-                <div class="panel">
-                    <h3>Memory</h3>
-                    <div id="memory-view"></div>
-                </div>
-            </div>
+        <div class="top-links">
+          <a href="https://github.com/MostlyKIGuess/RISC-V-Processor-Implementation/" class="github-link" target="_blank">
+            <span class="icon">&#xe043;</span> GitHub Repository
+          </a>
+          <a href="./report/Report.pdf" class="report-link" download>
+            <span class="icon">&#xe415;</span> Download Report
+          </a>
         </div>
-    </div>
+      </div>
 
-    <script src="js/cpu-data.js"></script>
-    <script src="js/visualizer.js"></script>
-</body>
+      <div class="notice">
+        <p>
+          <strong>Note:</strong> We are still working on this project and plan
+          to add functionality that will allow you to upload your own RISC-V
+          code to visualize. For now, explore these pre-programmed examples.
+          Have fun learning! :)
+        </p>
+      </div>
+
+      <nav class="page-nav">
+        <h3>Contents</h3>
+        <ul>
+          <li><a href="#cpu-demos">CPU Implementations</a></li>
+          <li><a href="#supported-instructions">Supported Instructions</a></li>
+          <li><a href="#comparison">CPU Comparison</a></li>
+          <li><a href="#resources">Resources</a></li>
+        </ul>
+      </nav>
+
+      <div class="page-guide">
+        <h3>Demo Structure</h3>
+        <p>This interactive demo is organized into these key sections:</p>
+        <ul class="guide-list">
+          <li>
+            <strong>CPU Implementations</strong> - Choose between Sequential and
+            Pipelined designs
+          </li>
+          <li>
+            <strong>Program Listings</strong> - View the RISC-V assembly
+            programs used in each demo
+          </li>
+          <li>
+            <strong>Execution Visualizations</strong> - Launch interactive
+            simulations showing CPU operation
+          </li>
+          <li>
+            <strong>Reference Materials</strong> - Browse supported instructions
+            and architecture details
+          </li>
+        </ul>
+        <p>
+          Start by selecting either the <strong>Sequential CPU</strong> or
+          <strong>Pipelined CPU</strong> demo below to explore different
+          architecture approaches.
+        </p>
+      </div>
+
+      <p>
+        This demo provides interactive visualizations of RISC-V CPU
+        implementations, demonstrating both sequential and pipelined
+        architectures.
+      </p>
+
+      <div id="cpu-demos" class="demo-cards">
+        <div class="demo-card">
+          <h2>Sequential CPU</h2>
+          <p>
+            A single-cycle implementation. Simple to understand but less
+            efficient.
+          </p>
+          <p><strong>Features:</strong></p>
+          <ul>
+            <li>Complete instruction execution in a single cycle</li>
+            <li>Direct visualization of control and data paths</li>
+            <li>Step-by-step execution with register and memory updates</li>
+          </ul>
+
+          <div class="button-container">
+            <a href="sequential/index.html" class="button">Launch Sequential CPU</a>
+          </div>
+        </div>
+
+        <div class="demo-card">
+          <h2>Pipelined CPU</h2>
+          <p>
+            A 5-stage pipelined implementation with hazard detection and
+            forwarding for improved performance.
+          </p>
+          <p><strong>Features:</strong></p>
+          <ul>
+            <li>5 pipeline stages: IF, ID, EX, MEM, WB</li>
+            <li>Data hazard detection and resolution</li>
+            <li>Forwarding paths to minimize stalls</li>
+            <li>Branch prediction and resolution</li>
+          </ul>
+
+          <div class="button-container">
+            <a href="pipelined/index.html" class="button">Launch Pipelined CPU</a>
+          </div>
+        </div>
+      </div>
+
+      <div class="programs-section">
+        <h2>Demo Programs</h2>
+
+        <div class="program-container">
+          <h3>Sequential CPU Program</h3>
+          <p>
+            The Sequential CPU demo executes the following RISC-V program:
+          </p>
+          <div class="demo-code">
+            <pre><code>addi x1, x0, 15    # Initialize x1 = 15
+addi x2, x0, 25    # Initialize x2 = 25
+addi x3, x0, 7     # Initialize x3 = 7
+addi x4, x0, 18    # Initialize x4 = 18
+add x5, x1, x2     # Add: x5 = x1 + x2
+sub x6, x2, x1     # Subtract: x6 = x2 - x1
+and x7, x1, x3     # Bitwise AND: x7 = x1 & x3
+or x8, x1, x3      # Bitwise OR: x8 = x1 | x3
+sd x5, 0(x0)       # Store x5 to memory[0]
+sd x6, 8(x0)       # Store x6 to memory[8]
+ld x9, 0(x0)       # Load from memory[0] to x9
+ld x10, 8(x0)      # Load from memory[8] to x10
+add x11, x9, x10   # x11 = x9 + x10
+sub x12, x9, x10   # x12 = x9 - x10
+beq x11, x12, skip # Branch if x11 == x12
+addi x13, x0, 100  # x13 = 100
+or x14, x11, x12   # x14 = x11 | x12
+and x15, x11, x12  # x15 = x11 & x12
+sd x14, 16(x0)     # Store x14 to memory[16]
+sd x15, 24(x0)     # Store x15 to memory[24]
+skip:
+addi x16, x0, 50   # x16 = 50
+add x17, x16, x15  # x17 = x16 + x15
+sub x18, x17, x14  # x18 = x17 - x14
+beq x17, x18, end  # Branch if x17 == x18
+ld x19, 16(x0)     # Load from memory[16] to x19
+ld x20, 24(x0)     # Load from memory[24] to x20
+or x21, x19, x20   # x21 = x19 | x20
+and x22, x19, x20  # x22 = x19 & x20
+sd x21, 32(x0)     # Store x21 to memory[32]
+sd x22, 40(x0)     # Store x22 to memory[40]
+end:
+nop</code></pre>
+          </div>
+          <div class="program-explanation">
+            <h4>Program Explanation:</h4>
+            <p>
+              This program demonstrates all supported RISC-V instructions in a
+              sequential execution:
+            </p>
+            <ol>
+              <li>
+                <strong>Register Initialization</strong>: Sets initial values
+                in registers x1-x4 using immediate values
+              </li>
+              <li>
+                <strong>Arithmetic Operations</strong>: Performs addition and
+                subtraction between registers
+              </li>
+              <li>
+                <strong>Logical Operations</strong>: Performs bitwise AND and
+                OR operations
+              </li>
+              <li>
+                <strong>Memory Operations</strong>: Stores and loads values
+                to/from memory
+              </li>
+              <li>
+                <strong>Branching</strong>: Uses conditional branches to
+                control program flow
+              </li>
+              <li>
+                <strong>Control Flow</strong>: Demonstrates label-based
+                branching with two code paths
+              </li>
+            </ol>
+            <p>
+              The sequential execution allows you to observe how each
+              instruction fully completes before the next one begins, with all
+              data paths and control signals visible during each step.
+            </p>
+          </div>
+        </div>
+
+        <div class="program-container">
+          <h3>Pipelined CPU Program</h3>
+          <p>The Pipelined CPU demo executes the following RISC-V program:</p>
+          <div class="demo-code">
+            <pre><code>begin:
+    addi x1, x0, 3      # x1 = 3
+    addi x2, x0, 7      # x2 = 7
+
+loop:
+    beq x1, x0, exit    # if x1==0, end program
+    add x2, x2, x1      # x2 = x1 + x2
+    addi x1, x1, -1     # x1--
+    beq x0, x0, loop    # loop
+
+exit:
+    nop                 # No operation</code></pre>
+          </div>
+          <div class="program-explanation">
+            <h4>Program Explanation:</h4>
+            <p>
+              This program is specifically designed to demonstrate pipeline
+              hazards and their resolution:
+            </p>
+            <ol>
+              <li>
+                <strong>Data Hazards</strong>: The program creates register
+                dependencies between instructions (x1 and x2 are both read and
+                written in consecutive instructions), triggering the
+                forwarding unit.
+              </li>
+              <li>
+                <strong>Control Hazards</strong>: The branch instructions
+                create control hazards that demonstrate branch prediction and
+                pipeline flushing.
+              </li>
+              <li>
+                <strong>Loop Implementation</strong>: The program implements a
+                simple counting loop that:
+                <ul>
+                  <li>Starts with x1 = 3 and x2 = 7</li>
+                  <li>
+                    Adds the current value of x1 to x2 on each iteration
+                  </li>
+                  <li>Decrements x1 by 1 on each iteration</li>
+                  <li>Exits when x1 reaches 0</li>
+                </ul>
+              </li>
+            </ol>
+            <p>
+              When the program completes, x1 will be 0 and x2 will be 7+3+2+1
+              = 13. By following the execution, you can observe how the
+              pipeline handles data and control hazards in real-time.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <div id="supported-instructions">
+        <h2>Supported Instructions</h2>
+        <table class="instruction-table">
+          <thead>
+            <tr>
+              <th>Instruction</th>
+              <th>Format</th>
+              <th>Operation</th>
+              <th>Description</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>add</td>
+              <td>R-type</td>
+              <td>add rd, rs1, rs2</td>
+              <td>rd ← rs1 + rs2</td>
+            </tr>
+            <tr>
+              <td>sub</td>
+              <td>R-type</td>
+              <td>sub rd, rs1, rs2</td>
+              <td>rd ← rs1 - rs2</td>
+            </tr>
+            <tr>
+              <td>and</td>
+              <td>R-type</td>
+              <td>and rd, rs1, rs2</td>
+              <td>rd ← rs1 & rs2</td>
+            </tr>
+            <tr>
+              <td>or</td>
+              <td>R-type</td>
+              <td>or rd, rs1, rs2</td>
+              <td>rd ← rs1 | rs2</td>
+            </tr>
+            <tr>
+              <td>addi</td>
+              <td>I-type</td>
+              <td>addi rd, rs1, imm</td>
+              <td>rd ← rs1 + imm</td>
+            </tr>
+            <tr>
+              <td>ld</td>
+              <td>I-type</td>
+              <td>ld rd, offset(rs1)</td>
+              <td>rd ← Memory[rs1 + offset]</td>
+            </tr>
+            <tr>
+              <td>sd</td>
+              <td>S-type</td>
+              <td>sd rs2, offset(rs1)</td>
+              <td>Memory[rs1 + offset] ← rs2</td>
+            </tr>
+            <tr>
+              <td>beq</td>
+              <td>B-type</td>
+              <td>beq rs1, rs2, offset</td>
+              <td>if (rs1 == rs2) PC ← PC + offset</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div id="comparison" class="comparison">
+        <h2>Sequential vs Pipelined CPU</h2>
+        <p>
+          The demo demonstrates two fundamentally different approaches to CPU
+          design:
+        </p>
+        <ul>
+          <li>
+            <strong>Sequential CPU</strong>: Completes an entire instruction
+            before fetching the next one. Simple design but lower performance.
+          </li>
+          <li>
+            <strong>Pipelined CPU</strong>: Overlaps execution of multiple
+            instructions. Higher performance but introduces hazards that require
+            special handling.
+          </li>
+        </ul>
+        <p>The pipelined implementation includes mechanisms to handle:</p>
+        <ul>
+          <li>
+            <strong>Data Hazards</strong>: When an instruction depends on the
+            result of a previous instruction still in the pipeline
+          </li>
+          <li>
+            <strong>Control Hazards</strong>: When branch instructions change
+            the flow of execution
+          </li>
+          <li>
+            <strong>Structural Hazards</strong>: When multiple instructions need
+            the same hardware resource
+          </li>
+        </ul>
+      </div>
+      
+      <div id="resources" class="resources">
+        <h2>Additional Resources</h2>
+        <div class="resource-links">
+          <a href="./report/Report.pdf" class="resource-btn" download>
+            <span class="icon">&#xe415;</span>
+            <div class="resource-info">
+              <h4>Design Report</h4>
+              <p>Detailed documentation of the RISC-V implementation</p>
+            </div>
+          </a>
+          <a href="https://github.com/MostlyKIGuess/RISC-V-Processor-Implementation/" class="resource-btn" target="_blank">
+            <span class="icon">&#xe043;</span>
+            <div class="resource-info">
+              <h4>GitHub Repository</h4>
+              <p>Explore the Verilog implementation and source code</p>
+            </div>
+          </a>
+        </div>
+      </div>
+      
+      <footer>
+        <p>RISC-V CPU Visualizer - Introduction to Processor Architecture (Spring 2025)</p>
+      </footer>
+    </div>
+  </body>
 </html>

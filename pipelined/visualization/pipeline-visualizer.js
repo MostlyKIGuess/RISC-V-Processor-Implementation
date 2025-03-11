@@ -787,8 +787,11 @@ document.addEventListener("DOMContentLoaded", function () {
       const regValue =
         cycleData[regName] !== undefined ? cycleData[regName] : 0;
 
-      const writtenThisCycle =
-        cycleData.reg_write && cycleData.reg_write_rd === i && i !== 0; // x0 can't change
+        const writtenThisCycle =
+        cycleData.mem_wb_reg_write === true &&  // using wb here
+        cycleData.mem_wb_rd !== undefined &&    // Use WB stage destination
+        cycleData.mem_wb_rd === i &&
+        i !== 0;
 
       const markedAsChanged = cycleData[`${regName}_changed`] === true;
 
@@ -969,7 +972,27 @@ document.addEventListener("DOMContentLoaded", function () {
     }
   });
 
+  function initializeMemory() {
+    // If pipelineData doesn't exist yet, wait for it to load
+    if (typeof pipelineData === "undefined" || !pipelineData.cycles || pipelineData.cycles.length === 0) {
+      setTimeout(initializeMemory, 100);
+      return;
+    }
+    
+    // Set initial memory values for all cycles
+    for (let i = 0; i < pipelineData.cycles.length; i++) {
+      // Set memory[0] = 10 for Fibonacci n value
+      pipelineData.cycles[i]["mem_0"] = 10;
+    }
+    
+    // Update display to show initial memory values
+    if (currentCycle === 0) {
+      updateMemory(pipelineData.cycles[0]);
+    }
+  }
   // Initialize
   drawPipelinedCPU();
   updateDisplay();
+  initializeMemory();
+
 });

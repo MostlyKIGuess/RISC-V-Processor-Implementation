@@ -972,7 +972,27 @@ document.addEventListener("DOMContentLoaded", function () {
     }
   });
 
+  function initializeMemory() {
+    // If pipelineData doesn't exist yet, wait for it to load
+    if (typeof pipelineData === "undefined" || !pipelineData.cycles || pipelineData.cycles.length === 0) {
+      setTimeout(initializeMemory, 100);
+      return;
+    }
+    
+    // Set initial memory values for all cycles
+    for (let i = 0; i < pipelineData.cycles.length; i++) {
+      // Set memory[0] = 10 for Fibonacci n value
+      pipelineData.cycles[i]["mem_0"] = 10;
+    }
+    
+    // Update display to show initial memory values
+    if (currentCycle === 0) {
+      updateMemory(pipelineData.cycles[0]);
+    }
+  }
   // Initialize
   drawPipelinedCPU();
   updateDisplay();
+  initializeMemory();
+
 });

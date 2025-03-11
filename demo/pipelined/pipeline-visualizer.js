@@ -779,24 +779,40 @@ document.addEventListener("DOMContentLoaded", function () {
   }
   function updateRegisters(cycleData) {
     const registers = [];
+
+    // Create register state array
     for (let i = 0; i < 32; i++) {
+      // Get register value from cycle data
+      const regName = `x${i}`;
+      const regValue =
+        cycleData[regName] !== undefined ? cycleData[regName] : 0;
+
+        const writtenThisCycle =
+        cycleData.mem_wb_reg_write === true &&  // using wb here
+        cycleData.mem_wb_rd !== undefined &&    // Use WB stage destination
+        cycleData.mem_wb_rd === i &&
+        i !== 0;
+
+      const markedAsChanged = cycleData[`${regName}_changed`] === true;
+
       registers.push({
         num: i,
-        value: cycleData[`x${i}`] || 0,
-        changed: cycleData.reg_write && cycleData.reg_rd === i,
+        value: regValue,
+        changed: writtenThisCycle || markedAsChanged,
       });
     }
 
+    // Generate HTML for register display
     let html = "";
     for (let i = 0; i < registers.length; i++) {
       if (i % 8 === 0) html += "<div class='register-row'>";
       html += `
-          <div class="register ${
-            registers[i].changed ? "register-changed" : ""
-          }">
-            <span>x${i}</span>
-            <span>${registers[i].value}</span>
-          </div>`;
+            <div class="register ${
+              registers[i].changed ? "register-changed" : ""
+            }">
+                <span>x${i}</span>
+                <span>${registers[i].value}</span>
+            </div>`;
       if (i % 8 === 7 || i === registers.length - 1) html += "</div>";
     }
 

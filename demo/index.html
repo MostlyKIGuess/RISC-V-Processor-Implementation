@@ -3,10 +3,19 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="description" content="Interactive visualization of RISC-V CPU implementations, including sequential and pipelined architectures." />
-    <meta name="keywords" content="RISC-V, CPU, Visualization, Sequential, Pipelined, Processor, Simulation" />
+    <meta
+      name="description"
+      content="Interactive visualization of RISC-V CPU implementations, including sequential and pipelined architectures."
+    />
+    <meta
+      name="keywords"
+      content="RISC-V, CPU, Visualization, Sequential, Pipelined, Processor, Simulation"
+    />
     <meta name="author" content="MostlyKIGuess" />
-    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <link
+      href="https://fonts.googleapis.com/icon?family=Material+Icons"
+      rel="stylesheet"
+    />
     <title>RISC-V CPU Visualizer</title>
     <link rel="icon" type="image/jpg" href="./catprocessor.jpg" />
     <link rel="stylesheet" href="css/styles.css" />
@@ -15,9 +24,13 @@
     <div class="container">
       <div class="header-container">
         <h1>RISC-V CPU Visualization</h1>
-        
+
         <div class="top-links">
-          <a href="https://github.com/MostlyKIGuess/RISC-V-Processor-Implementation/" class="github-link" target="_blank">
+          <a
+            href="https://github.com/MostlyKIGuess/RISC-V-Processor-Implementation/"
+            class="github-link"
+            target="_blank"
+          >
             <span class="icon">&#xe043;</span> GitHub Repository
           </a>
           <a href="./report/Report.pdf" class="report-link" download>
@@ -94,7 +107,9 @@
           </ul>
 
           <div class="button-container">
-            <a href="sequential/index.html" class="button">Launch Sequential CPU</a>
+            <a href="sequential/index.html" class="button"
+              >Launch Sequential CPU</a
+            >
           </div>
         </div>
 
@@ -113,7 +128,9 @@
           </ul>
 
           <div class="button-container">
-            <a href="pipelined/index.html" class="button">Launch Pipelined CPU</a>
+            <a href="pipelined/index.html" class="button"
+              >Launch Pipelined CPU</a
+            >
           </div>
         </div>
       </div>
@@ -123,9 +140,7 @@
 
         <div class="program-container">
           <h3>Sequential CPU Program</h3>
-          <p>
-            The Sequential CPU demo executes the following RISC-V program:
-          </p>
+          <p>The Sequential CPU demo executes the following RISC-V program:</p>
           <div class="demo-code">
             <pre><code>addi x1, x0, 15    # Initialize x1 = 15
 addi x2, x0, 25    # Initialize x2 = 25
@@ -169,24 +184,24 @@ nop</code></pre>
             </p>
             <ol>
               <li>
-                <strong>Register Initialization</strong>: Sets initial values
-                in registers x1-x4 using immediate values
+                <strong>Register Initialization</strong>: Sets initial values in
+                registers x1-x4 using immediate values
               </li>
               <li>
                 <strong>Arithmetic Operations</strong>: Performs addition and
                 subtraction between registers
               </li>
               <li>
-                <strong>Logical Operations</strong>: Performs bitwise AND and
-                OR operations
+                <strong>Logical Operations</strong>: Performs bitwise AND and OR
+                operations
               </li>
               <li>
                 <strong>Memory Operations</strong>: Stores and loads values
                 to/from memory
               </li>
               <li>
-                <strong>Branching</strong>: Uses conditional branches to
-                control program flow
+                <strong>Branching</strong>: Uses conditional branches to control
+                program flow
               </li>
               <li>
                 <strong>Control Flow</strong>: Demonstrates label-based
@@ -205,54 +220,65 @@ nop</code></pre>
           <h3>Pipelined CPU Program</h3>
           <p>The Pipelined CPU demo executes the following RISC-V program:</p>
           <div class="demo-code">
-            <pre><code>begin:
-    addi x1, x0, 3      # x1 = 3
-    addi x2, x0, 7      # x2 = 7
-
-loop:
-    beq x1, x0, exit    # if x1==0, end program
-    add x2, x2, x1      # x2 = x1 + x2
-    addi x1, x1, -1     # x1--
-    beq x0, x0, loop    # loop
-
-exit:
-    nop                 # No operation</code></pre>
+            <pre><code>start:
+              ld x1, 0(x0)    # Load n from memory
+              addi x2, x0, 0     # x2 = 0 (Fib(0))
+              addi x3, x0, 1     # x3 = 1 (Fib(1))
+              beq x1, x0, done   # If n == 0, return Fib(0)
+              addi x1, x1, -1   # Decrement n by 1 to account for Fib(1)
+              beq x1, x0, done1  # If n == 1, return Fib(1)
+          
+          loop:
+              add x4, x2, x3   # x4 = x2 + x3 (Fib(n) = Fib(n-1) + Fib(n-2))
+              add x2, x3, x0    # x2 = x3 (shift Fib(n-1) to Fib(n-2))
+              add x3, x4, x0    # x3 = x4 (shift Fib(n) to Fib(n-1))
+              addi x1, x1, -1   # Decrement n
+              beq x1, x0, done1  # Repeat until n == 0
+              beq x0, x0, loop
+          
+          done1:
+              add x4, x3, x0    # Return Fib(1)
+          
+          done:
+              # x4 holds the Fibonacci result
+              addi x0, x0, 0
+              nop</code></pre>
           </div>
           <div class="program-explanation">
             <h4>Program Explanation:</h4>
             <p>
-              This program is specifically designed to demonstrate pipeline
-              hazards and their resolution:
+              This Fibonacci calculator demonstrates pipeline hazards and their
+              resolution:
             </p>
             <ol>
               <li>
                 <strong>Data Hazards</strong>: The program creates register
-                dependencies between instructions (x1 and x2 are both read and
-                written in consecutive instructions), triggering the
-                forwarding unit.
+                dependencies between instructions (registers are both read and
+                written in consecutive instructions), triggering the forwarding
+                unit.
               </li>
               <li>
-                <strong>Control Hazards</strong>: The branch instructions
-                create control hazards that demonstrate branch prediction and
-                pipeline flushing.
+                <strong>Control Hazards</strong>: The multiple branch
+                instructions create control hazards that demonstrate branch
+                prediction and pipeline flushing.
               </li>
               <li>
-                <strong>Loop Implementation</strong>: The program implements a
-                simple counting loop that:
+                <strong>Fibonacci Implementation</strong>: The program
+                calculates the Fibonacci sequence:
                 <ul>
-                  <li>Starts with x1 = 3 and x2 = 7</li>
-                  <li>
-                    Adds the current value of x1 to x2 on each iteration
-                  </li>
-                  <li>Decrements x1 by 1 on each iteration</li>
-                  <li>Exits when x1 reaches 0</li>
+                  <li>Loads n=10 from memory location 0</li>
+                  <li>Initializes with Fib(0)=0 and Fib(1)=1</li>
+                  <li>Iteratively computes Fib(n) = Fib(n-1) + Fib(n-2)</li>
+                  <li>For n=10, the result will be Fib(10)=55</li>
                 </ul>
               </li>
             </ol>
             <p>
-              When the program completes, x1 will be 0 and x2 will be 7+3+2+1
-              = 13. By following the execution, you can observe how the
-              pipeline handles data and control hazards in real-time.
+              When the program completes, x4 will contain the 10th Fibonacci
+              number (55). Following the execution shows how the pipeline
+              handles data dependencies and branch predictions in this more
+              complex algorithm. The first instruction demonstrates memory
+              access hazards by loading the value from memory.
             </p>
           </div>
         </div>
@@ -355,7 +381,7 @@ exit:
           </li>
         </ul>
       </div>
-      
+
       <div id="resources" class="resources">
         <h2>Additional Resources</h2>
         <div class="resource-links">
@@ -366,7 +392,11 @@ exit:
               <p>Detailed documentation of the RISC-V implementation</p>
             </div>
           </a>
-          <a href="https://github.com/MostlyKIGuess/RISC-V-Processor-Implementation/" class="resource-btn" target="_blank">
+          <a
+            href="https://github.com/MostlyKIGuess/RISC-V-Processor-Implementation/"
+            class="resource-btn"
+            target="_blank"
+          >
             <span class="icon">&#xe043;</span>
             <div class="resource-info">
               <h4>GitHub Repository</h4>
@@ -375,13 +405,12 @@ exit:
           </a>
         </div>
       </div>
-      
+
       <footer>
         <p>RISC-V CPU Visualizer</p>
         <p>Made with <span class="icon">&#xe87d;</span></p>
         <p>&copy; 2025 All rights reserved.</p>
       </footer>
-      
     </div>
   </body>
 </html>

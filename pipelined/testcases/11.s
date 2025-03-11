@@ -1,5 +1,5 @@
 start:
-    addi x1, x0, 10    # Load n
+    load x1, 0(x0)    # Load n
     addi x2, x0, 0     # x2 = 0 (Fib(0))
     addi x3, x0, 1     # x3 = 1 (Fib(1))
     beq x1, x0, done   # If n == 0, return Fib(0)

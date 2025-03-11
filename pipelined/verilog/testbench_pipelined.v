@@ -16,13 +16,21 @@ module testbench_pipelined();
         reset = 1;
         
         // Initialize instruction memory first
-        cpu.imem.memory[0] = 32'b00000000001100000000000010010011;
-        cpu.imem.memory[1] = 32'b00000000011100000000000100010011;
-        cpu.imem.memory[2] = 32'b00000000000000001000100001100011;
-        cpu.imem.memory[3] = 32'b00000000000100010000000100110011;
+        cpu.imem.memory[0] = 32'b00000000101000000000000010010011;
+        cpu.imem.memory[1] = 32'b00000000000000000000000100010011;
+        cpu.imem.memory[2] = 32'b00000000000100000000000110010011;
+        cpu.imem.memory[3] = 32'b00000010000000001000010001100011;
         cpu.imem.memory[4] = 32'b11111111111100001000000010010011;
-        cpu.imem.memory[5] = 32'b11111110000000000000101011100011;
-        cpu.imem.memory[6] = 32'b00000000000000000000000000000000;
+        cpu.imem.memory[5] = 32'b00000000000000001000111001100011;
+        cpu.imem.memory[6] = 32'b00000000001100010000001000110011;
+        cpu.imem.memory[7] = 32'b00000000000000011000000100110011;
+        cpu.imem.memory[8] = 32'b00000000000000100000000110110011;
+        cpu.imem.memory[9] = 32'b11111111111100001000000010010011;
+        cpu.imem.memory[10] = 32'b00000000000000001000010001100011;
+        cpu.imem.memory[11] = 32'b11111110000000000000011011100011;
+        cpu.imem.memory[12] = 32'b00000000000000011000001000110011;
+        cpu.imem.memory[13] = 32'b00000000000000000000000000010011;
+        cpu.imem.memory[14] = 32'b00000000000000000000000000000000;
         
         // promper initialization
         #10 reset = 0;
@@ -157,7 +165,11 @@ module testbench_pipelined();
             $display("MEM/WB: Instruction=%h, rd=x%0d, RegWrite=%b, MemToReg=%b", 
                      cpu.mem_wb_instruction, cpu.mem_wb_rd, cpu.mem_wb_reg_write, 
                      cpu.mem_wb_mem_to_reg);
-            
+            $display("Register Values:");
+            for (i = 0; i < 32; i = i + 1) begin
+                $display("reg[%0d]=%0d", i, cpu.reg_file.registers[i]);
+            end
+                        
                 // Hazard detection information
                 if (cpu.stall) begin  // Use cpu.stall directly instead of cpu.hazard_detection_unit.stall_pipeline
                     $display("HAZARD DETECTED: Stalling pipeline");

@@ -9,6 +9,9 @@ def parse_pipeline_output(file_path):
     cycles = []
     cycle_blocks = content.split("--------------------------------")
     
+    current_registers = {f"x{i}": 0 for i in range(32)}
+    current_memory = {}
+    
     # Parse the cycle-by-cycle data
     for block in cycle_blocks:
         if "Time=" not in block:
@@ -21,6 +24,8 @@ def parse_pipeline_output(file_path):
         if cycle_match:
             cycle_data["cycle"] = int(cycle_match.group(1))
         
+        # Clear the changed registers from previous cycle
+        changed_registers = set()        
         # Extract IF stage data
         pc_match = re.search(r"IF Stage: PC=([0-9a-fA-Fx]+)", block)
         if pc_match:
@@ -85,12 +90,35 @@ def parse_pipeline_output(file_path):
             cycle_data["mem_write"] = bool(int(control_match.group(4)))
             cycle_data["alu_src"] = bool(int(control_match.group(5)))
             cycle_data["reg_write"] = bool(int(control_match.group(6)))
+        
+        reg_values = {}
+        reg_matches = re.findall(r"reg\[(\d+)\]=(-?\d+)", block)
+        for reg_match in reg_matches:
+            reg_num = int(reg_match[0])
+            reg_value = int(reg_match[1])
+            reg_name = f"x{reg_num}"
+            reg_values[reg_name] = reg_value
+            
+            # Update our register tracking
+            if current_registers.get(reg_name, 0) != reg_value:
+                cycle_data[f"{reg_name}_changed"] = True
+                current_registers[reg_name] = reg_value
+        
+        # Copy all current register values to this cycle
+        for reg, value in current_registers.items():
+            cycle_data[reg] = value
+            
+        # Mark which registers changed this cycle
+        for reg_name in changed_registers:
+            cycle_data[f"{reg_name}_changed"] = True
             
         # Extract WB activity (register writes)
         wb_match = re.search(r"WB Stage: Writing (-?\d+) to register x(\d+)", block)
         if wb_match:
             cycle_data["reg_write_data"] = int(wb_match.group(1))
             cycle_data["reg_write_rd"] = int(wb_match.group(2))
+            reg_name = f"x{int(wb_match.group(2))}"
+            cycle_data[f"{reg_name}_written"] = True
             
         # Extract memory access information
         mem_read_match = re.search(r"MEM Stage: Reading from address (-?\d+), value=(-?\d+)", block)
@@ -108,7 +136,6 @@ def parse_pipeline_output(file_path):
             cycle_data["if_stalled"] = True
             cycle_data["id_stalled"] = True
         
-        # Check for load-use hazard keywords
         if "hazard detected" in block.lower() or "stalling pipeline" in block.lower():
             cycle_data["stall"] = True
             cycle_data["load_hazard"] = True
@@ -188,10 +215,9 @@ def parse_pipeline_output(file_path):
             cycle_data["flush_occurred"] = True
             cycle_data["pipeline_recovery"] = True
         
- 
         cycles.append(cycle_data)
     
-    # Parse final register and memory state
+    # Process final memory and register state
     final_registers = {}
     final_memory = {}
     
@@ -215,7 +241,7 @@ def parse_pipeline_output(file_path):
             mem_value = int(match[1])
             final_memory[f"mem_{mem_addr}"] = mem_value
     
-    # Add the final register and memory values to the last cycle
+    # Ensure we have all register values in the last cycle
     if cycles and final_registers:
         for reg_name, reg_value in final_registers.items():
             cycles[-1][reg_name] = reg_value

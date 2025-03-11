@@ -361,7 +361,11 @@ module testbench_pipelined();
             $display("MEM/WB: Instruction=%h, rd=x%0d, RegWrite=%b, MemToReg=%b", 
                      cpu.mem_wb_instruction, cpu.mem_wb_rd, cpu.mem_wb_reg_write, 
                      cpu.mem_wb_mem_to_reg);
-            
+            $display("Register Values:");
+            for (i = 0; i < 32; i = i + 1) begin
+                $display("reg[%0d]=%0d", i, cpu.reg_file.registers[i]);
+            end
+                        
                 // Hazard detection information
                 if (cpu.stall) begin  // Use cpu.stall directly instead of cpu.hazard_detection_unit.stall_pipeline
                     $display("HAZARD DETECTED: Stalling pipeline");
